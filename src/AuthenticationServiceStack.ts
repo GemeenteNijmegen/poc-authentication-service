@@ -1,22 +1,37 @@
 import { PermissionsBoundaryAspect } from '@gemeentenijmegen/aws-constructs';
 import { Aspects, Duration, Stack, StackProps } from 'aws-cdk-lib';
-import { IdentitySource, LambdaIntegration, RequestAuthorizer, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { IdentitySource, LambdaIntegration, RequestAuthorizer, RestApi, SecurityPolicy } from 'aws-cdk-lib/aws-apigateway';
+import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
+import { HostedZone, ZoneDelegationRecord } from 'aws-cdk-lib/aws-route53';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { JwtAuthorizerFunction } from './authorizer/JwtAuthorizer-function';
 import { SecureFunction } from './secure/secure-function';
+import { Statics } from './Statics';
 import { TokenFunction } from './token/token-function';
 import { JwksFunction } from './well-known/jwks/jwks-function';
 import { ConfigFunction } from './well-known/openid-configuration/config-function';
 
 
 export class AuthenticationServiceStack extends Stack {
+
+  private readonly subdomain: HostedZone;
+
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
 
     Aspects.of(this).add(new PermissionsBoundaryAspect());
 
-    const api = new RestApi(this, 'api');
+    // Setup a subdomain, certificate and REST API Gateway
+    this.subdomain = this.createSubdomain();
+    const api = new RestApi(this, 'api', {
+      domainName: {
+        domainName: this.subdomain.zoneName,
+        securityPolicy: SecurityPolicy.TLS_1_2,
+        certificate: this.certificate(this.subdomain),
+      },
+    });
 
     // Example authorization server side (token endpoint, jwks endpoint and openid-configuration endpoint. No authorization endpoint)
     const secure = api.root.addResource('secure');
@@ -50,6 +65,7 @@ export class AuthenticationServiceStack extends Stack {
     const tokenFunction = new TokenFunction(this, 'tokens', {
       environment: {
         PRIVATE_KEY_ARN: privateKeySecret.secretArn,
+        ISSUER: this.subdomain.zoneName,
       },
     });
     privateKeySecret.grantRead(tokenFunction);
@@ -74,6 +90,7 @@ export class AuthenticationServiceStack extends Stack {
       handler: new JwtAuthorizerFunction(this, 'jwt-authorizer', {
         environment: {
           REQUIRED_SCOPE: 'test',
+          ISSUER: this.subdomain.zoneName,
         },
       }),
       resultsCacheTtl: Duration.minutes(0), // no cashing
@@ -82,4 +99,35 @@ export class AuthenticationServiceStack extends Stack {
       ],
     });
   }
+
+
+  createSubdomain() {
+    const accountHostedZone = HostedZone.fromHostedZoneAttributes(this, 'account-hostedzone', {
+      hostedZoneId: StringParameter.valueForStringParameter(this, Statics.accountHostedZoneId),
+      zoneName: StringParameter.valueForStringParameter(this, Statics.accountHostedZoneName),
+    });
+
+    const subdomain = `authentication.${accountHostedZone.zoneName}`;
+    const hostedzone = new HostedZone(this, 'hostedzone', {
+      zoneName: subdomain,
+    });
+
+    if (!hostedzone.hostedZoneNameServers) {
+      throw Error('Nameservers should be set');
+    }
+    new ZoneDelegationRecord(this, 'ns-record', {
+      nameServers: hostedzone.hostedZoneNameServers,
+      zone: accountHostedZone,
+    });
+    return hostedzone;
+  }
+
+  certificate(hostedzone: HostedZone) {
+    const cert = new Certificate(this, 'certificate', {
+      domainName: hostedzone.zoneName,
+      validation: CertificateValidation.fromDns(hostedzone),
+    });
+    return cert;
+  }
+
 }

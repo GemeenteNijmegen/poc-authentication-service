@@ -73,7 +73,7 @@ export async function tokenResponse(scopes: string[], clientId: string, privateK
 
   const token = await new SignJWT({
     aud: clientId,
-    iss: 'https://aysy4jy713.execute-api.eu-central-1.amazonaws.com/prod/oauth',
+    iss: `${process.env.ISSUER}/oauth`,
     iat: Math.floor(now.getTime() / 1000),
     exp: Math.floor(exp.getTime() / 1000),
     sub: clientId,
