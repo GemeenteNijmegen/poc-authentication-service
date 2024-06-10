@@ -3,31 +3,7 @@ import { AWS } from '@gemeentenijmegen/utils';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { SignJWT } from 'jose';
 import { InvalidClient, InvalidRequest, InvalidScope, OAuthError, UnauthorizedClient, UnsupportedGrantType } from './Errors';
-
-interface ClientConfiguration {
-  secret: string;
-  scopes: string[];
-}
-
-/**
- * A map of client ids and secrets
- */
-const clients: Record<string, ClientConfiguration> = {
-  readClient: {
-    secret: 'geheim',
-    scopes: ['read'],
-  },
-  writeClient: {
-    secret: 'geheim',
-    scopes: ['write'],
-  },
-  adminClient: {
-    secret: 'geheim',
-    scopes: ['read', 'write'],
-  },
-};
-
-const knownScopes = ['read', 'write'];
+import { ClientConfiguration, clients, knownScopes } from '../Authorization';
 
 
 let privateKey: string | undefined = undefined;
@@ -42,11 +18,15 @@ export async function handler(event: APIGatewayProxyEvent) : Promise<APIGatewayP
 
   await initalization;
 
+  if (!privateKey) {
+    throw Error('Whaaa');
+  }
+
   try {
     validateRequest(event);
     const clientId = authenticateRequest(event);
     const scopes = authorizedScopes(event, clients[clientId]);
-    return await tokenResponse(scopes, clientId);
+    return await tokenResponse(scopes, clientId, privateKey);
   } catch (error) {
     console.error(error);
     if (error instanceof OAuthError) {
@@ -81,15 +61,15 @@ export function authorizedScopes(request: APIGatewayProxyEvent, client: ClientCo
   return allowedScopes;
 }
 
-export async function tokenResponse(scopes: string[], clientId: string) : Promise<APIGatewayProxyResult> {
+export async function tokenResponse(scopes: string[], clientId: string, privateKeyParam: string) : Promise<APIGatewayProxyResult> {
 
   const now = new Date();
   const exp = new Date();
   exp.setHours(now.getHours() + 1);
 
-  if (!privateKey) {
-    throw Error('No private key for signing');
-  }
+  // if (!privateKey) {
+  //   throw Error('No private key for signing');
+  // }
 
   const token = await new SignJWT({
     aud: clientId,
@@ -104,7 +84,7 @@ export async function tokenResponse(scopes: string[], clientId: string) : Promis
     typ: 'JWT',
     kid: '0aa559a8-d56f-424c-b9bd-9dd598c3cf15',
   }).sign(crypto.createPrivateKey({
-    key: privateKey,
+    key: privateKeyParam,
     format: 'pem',
   }));
 
