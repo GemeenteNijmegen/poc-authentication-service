@@ -146,7 +146,12 @@
       {
         "devDependencies": [
           "**/test/**",
-          "**/build-tools/**"
+          "**/build-tools/**",
+          "src/authorizer/JwtAuthorizer.lambda.ts",
+          "src/secure/secure.lambda.ts",
+          "src/token/token.lambda.ts",
+          "src/well-known/jwks/jwks.lambda.ts",
+          "src/well-known/openid-configuration/config.lambda.ts"
         ],
         "optionalDependencies": false,
         "peerDependencies": true

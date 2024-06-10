@@ -4,6 +4,16 @@
     "build": "npx projen build",
     "bump": "npx projen bump",
     "bundle": "npx projen bundle",
+    "bundle:authorizer/JwtAuthorizer.lambda": "npx projen bundle:authorizer/JwtAuthorizer.lambda",
+    "bundle:authorizer/JwtAuthorizer.lambda:watch": "npx projen bundle:authorizer/JwtAuthorizer.lambda:watch",
+    "bundle:secure/secure.lambda": "npx projen bundle:secure/secure.lambda",
+    "bundle:secure/secure.lambda:watch": "npx projen bundle:secure/secure.lambda:watch",
+    "bundle:token/token.lambda": "npx projen bundle:token/token.lambda",
+    "bundle:token/token.lambda:watch": "npx projen bundle:token/token.lambda:watch",
+    "bundle:well-known/jwks/jwks.lambda": "npx projen bundle:well-known/jwks/jwks.lambda",
+    "bundle:well-known/jwks/jwks.lambda:watch": "npx projen bundle:well-known/jwks/jwks.lambda:watch",
+    "bundle:well-known/openid-configuration/config.lambda": "npx projen bundle:well-known/openid-configuration/config.lambda",
+    "bundle:well-known/openid-configuration/config.lambda:watch": "npx projen bundle:well-known/openid-configuration/config.lambda:watch",
     "clobber": "npx projen clobber",
     "compile": "npx projen compile",
     "default": "npx projen default",
@@ -47,8 +57,13 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@gemeentenijmegen/apigateway-http": "^0.0.12",
+    "@gemeentenijmegen/aws-constructs": "^0.0.11",
+    "@gemeentenijmegen/utils": "^0.0.12",
+    "@types/aws-lambda": "^8.10.138",
     "aws-cdk-lib": "^2.1.0",
-    "constructs": "^10.0.5"
+    "constructs": "^10.0.5",
+    "jose": "^5.4.0"
   },
   "license": "EUPL-1.2",
   "publishConfig": {

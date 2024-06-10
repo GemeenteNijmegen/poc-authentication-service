@@ -43,7 +43,114 @@
     },
     "bundle": {
       "name": "bundle",
-      "description": "Prepare assets"
+      "description": "Prepare assets",
+      "steps": [
+        {
+          "spawn": "bundle:authorizer/JwtAuthorizer.lambda"
+        },
+        {
+          "spawn": "bundle:secure/secure.lambda"
+        },
+        {
+          "spawn": "bundle:token/token.lambda"
+        },
+        {
+          "spawn": "bundle:well-known/jwks/jwks.lambda"
+        },
+        {
+          "spawn": "bundle:well-known/openid-configuration/config.lambda"
+        }
+      ]
+    },
+    "bundle:authorizer/JwtAuthorizer.lambda": {
+      "name": "bundle:authorizer/JwtAuthorizer.lambda",
+      "description": "Create a JavaScript bundle from src/authorizer/JwtAuthorizer.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/authorizer/JwtAuthorizer.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/authorizer/JwtAuthorizer.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/*"
+        }
+      ]
+    },
+    "bundle:authorizer/JwtAuthorizer.lambda:watch": {
+      "name": "bundle:authorizer/JwtAuthorizer.lambda:watch",
+      "description": "Continuously update the JavaScript bundle from src/authorizer/JwtAuthorizer.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/authorizer/JwtAuthorizer.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/authorizer/JwtAuthorizer.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/* --watch"
+        }
+      ]
+    },
+    "bundle:secure/secure.lambda": {
+      "name": "bundle:secure/secure.lambda",
+      "description": "Create a JavaScript bundle from src/secure/secure.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/secure/secure.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/secure/secure.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/*"
+        }
+      ]
+    },
+    "bundle:secure/secure.lambda:watch": {
+      "name": "bundle:secure/secure.lambda:watch",
+      "description": "Continuously update the JavaScript bundle from src/secure/secure.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/secure/secure.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/secure/secure.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/* --watch"
+        }
+      ]
+    },
+    "bundle:token/token.lambda": {
+      "name": "bundle:token/token.lambda",
+      "description": "Create a JavaScript bundle from src/token/token.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/token/token.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/token/token.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/*"
+        }
+      ]
+    },
+    "bundle:token/token.lambda:watch": {
+      "name": "bundle:token/token.lambda:watch",
+      "description": "Continuously update the JavaScript bundle from src/token/token.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/token/token.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/token/token.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/* --watch"
+        }
+      ]
+    },
+    "bundle:well-known/jwks/jwks.lambda": {
+      "name": "bundle:well-known/jwks/jwks.lambda",
+      "description": "Create a JavaScript bundle from src/well-known/jwks/jwks.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/well-known/jwks/jwks.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/well-known/jwks/jwks.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/*"
+        }
+      ]
+    },
+    "bundle:well-known/jwks/jwks.lambda:watch": {
+      "name": "bundle:well-known/jwks/jwks.lambda:watch",
+      "description": "Continuously update the JavaScript bundle from src/well-known/jwks/jwks.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/well-known/jwks/jwks.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/well-known/jwks/jwks.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/* --watch"
+        }
+      ]
+    },
+    "bundle:well-known/openid-configuration/config.lambda": {
+      "name": "bundle:well-known/openid-configuration/config.lambda",
+      "description": "Create a JavaScript bundle from src/well-known/openid-configuration/config.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/well-known/openid-configuration/config.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/well-known/openid-configuration/config.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/*"
+        }
+      ]
+    },
+    "bundle:well-known/openid-configuration/config.lambda:watch": {
+      "name": "bundle:well-known/openid-configuration/config.lambda:watch",
+      "description": "Continuously update the JavaScript bundle from src/well-known/openid-configuration/config.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/well-known/openid-configuration/config.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/well-known/openid-configuration/config.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/* --watch"
+        }
+      ]
     },
     "clobber": {
       "name": "clobber",
@@ -277,13 +384,13 @@
       },
       "steps": [
         {
-          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@gemeentenijmegen/projen-project-type,@types/jest,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,jest,projen,ts-jest,ts-node,typescript"
+          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@gemeentenijmegen/projen-project-type,@types/jest,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,jest,projen,ts-jest,ts-node,typescript,@gemeentenijmegen/apigateway-http,@gemeentenijmegen/aws-constructs,@gemeentenijmegen/utils,@types/aws-lambda,jose"
         },
         {
           "exec": "yarn install --check-files"
         },
         {
-          "exec": "yarn upgrade @gemeentenijmegen/projen-project-type @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen standard-version ts-jest ts-node typescript aws-cdk-lib constructs"
+          "exec": "yarn upgrade @gemeentenijmegen/projen-project-type @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen standard-version ts-jest ts-node typescript @gemeentenijmegen/apigateway-http @gemeentenijmegen/aws-constructs @gemeentenijmegen/utils @types/aws-lambda aws-cdk-lib constructs jose"
         },
         {
           "exec": "npx projen"
