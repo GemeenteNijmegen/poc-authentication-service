@@ -49,10 +49,7 @@ export function authorizedScopes(request: APIGatewayProxyEvent, client: ClientCo
   const requestedScopes = body.get('scope');
 
   // All scopes allowed for this client
-  const unfilteredScopes = client.authorizations.reduce((scopes: string[], authorization: Authorization) => {
-    return [...scopes, ...authorization.scopes];
-  }, []);
-  const allAllowedScopes = unfilteredScopes.filter((scope, index) => unfilteredScopes.indexOf(scope) === index);
+  const allAllowedScopes = scopesFromClientConfiguration(client);
 
   // Check requested scopes
   if (requestedScopes) {
@@ -65,6 +62,13 @@ export function authorizedScopes(request: APIGatewayProxyEvent, client: ClientCo
 
   // Default to all allowed scopes for this client
   return allAllowedScopes;
+}
+
+export function scopesFromClientConfiguration(configuration: ClientConfiguration) {
+  const unfilteredScopes = configuration.authorizations.reduce((scopes: string[], authorization: Authorization) => {
+    return [...scopes, ...authorization.scopes];
+  }, []);
+  return unfilteredScopes.filter((scope, index) => unfilteredScopes.indexOf(scope) === index);
 }
 
 export async function tokenResponse(scopes: string[], clientId: string, privateKeyParam: string) : Promise<APIGatewayProxyResult> {

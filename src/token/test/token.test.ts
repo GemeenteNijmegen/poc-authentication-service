@@ -1,5 +1,6 @@
 import { AWS } from '@gemeentenijmegen/utils';
-import { authenticateRequest } from '../token.lambda';
+import { ClientConfiguration } from '../../Authorization';
+import { authenticateRequest, scopesFromClientConfiguration } from '../token.lambda';
 
 jest.spyOn(AWS, 'getSecret').mockResolvedValue(
   'abc',
@@ -52,3 +53,48 @@ test('Authentication using basic auth and body', async () => {
 });
 
 
+describe('Scope tests', () => {
+  const readClient: ClientConfiguration = {
+    secret: 'geheim',
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['read'],
+      },
+    ],
+  };
+  const adminClient: ClientConfiguration = {
+    secret: 'geheim',
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['read', 'write'],
+      },
+    ],
+  };
+
+  const duplicateClient: ClientConfiguration = {
+    secret: 'geheim',
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['read', 'write'],
+      },
+      {
+        endpoint: 'example-api-2',
+        scopes: ['read', 'write', 'admin'],
+      },
+    ],
+  };
+  test('One scopes in config', async() => {
+    expect(scopesFromClientConfiguration(readClient)).toEqual(['read']);
+  });
+
+  test('Two scopes in config', async() => {
+    expect(scopesFromClientConfiguration(adminClient)).toEqual(['read', 'write']);
+  });
+
+  test('Three scopes in config, two duplicate', async() => {
+    expect(scopesFromClientConfiguration(duplicateClient)).toEqual(['read', 'write', 'admin']);
+  });
+});
