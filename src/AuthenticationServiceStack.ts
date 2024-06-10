@@ -2,7 +2,8 @@ import { PermissionsBoundaryAspect } from '@gemeentenijmegen/aws-constructs';
 import { Aspects, Duration, Stack, StackProps } from 'aws-cdk-lib';
 import { IdentitySource, LambdaIntegration, RequestAuthorizer, RestApi, SecurityPolicy } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
-import { HostedZone, ZoneDelegationRecord } from 'aws-cdk-lib/aws-route53';
+import { ARecord, HostedZone, NsRecord, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { ApiGateway } from 'aws-cdk-lib/aws-route53-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
@@ -31,6 +32,12 @@ export class AuthenticationServiceStack extends Stack {
         securityPolicy: SecurityPolicy.TLS_1_2,
         certificate: this.certificate(this.subdomain),
       },
+    });
+
+    new ARecord(this, 'a-record', {
+      target: RecordTarget.fromAlias(new ApiGateway(api)),
+      zone: this.subdomain,
+      comment: 'To api gateway',
     });
 
     // Example authorization server side (token endpoint, jwks endpoint and openid-configuration endpoint. No authorization endpoint)
@@ -115,9 +122,10 @@ export class AuthenticationServiceStack extends Stack {
     if (!hostedzone.hostedZoneNameServers) {
       throw Error('Nameservers should be set');
     }
-    new ZoneDelegationRecord(this, 'ns-record', {
-      nameServers: hostedzone.hostedZoneNameServers,
+    new NsRecord(this, 'ns-record', {
       zone: accountHostedZone,
+      recordName: subdomain,
+      values: hostedzone.hostedZoneNameServers,
     });
     return hostedzone;
   }

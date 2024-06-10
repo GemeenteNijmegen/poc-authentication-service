@@ -43,7 +43,7 @@ export async function handler(
 };
 
 async function validateJwt(jwt: string, event: APIGatewayRequestAuthorizerEvent) {
-  const issuer = `${process.env.ISSER}/oauth`;
+  const issuer = `https://${process.env.ISSUER}/oauth`;
   const jwks = jose.createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`));
   const result = await jose.jwtVerify(jwt, jwks, {
     issuer: issuer,

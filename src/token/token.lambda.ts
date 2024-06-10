@@ -3,7 +3,7 @@ import { AWS } from '@gemeentenijmegen/utils';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { SignJWT } from 'jose';
 import { InvalidClient, InvalidRequest, InvalidScope, OAuthError, UnauthorizedClient, UnsupportedGrantType } from './Errors';
-import { ClientConfiguration, clients, knownScopes } from '../Authorization';
+import { Authorization, ClientConfiguration, clients, knownScopes } from '../Authorization';
 
 
 let privateKey: string | undefined = undefined;
@@ -48,32 +48,35 @@ export function authorizedScopes(request: APIGatewayProxyEvent, client: ClientCo
   const body = new URLSearchParams(request.body!);
   const requestedScopes = body.get('scope');
 
-  if (!requestedScopes) {
-    // All scopes allowed for this client
-    return client.scopes;
+  // All scopes allowed for this client
+  const unfilteredScopes = client.authorizations.reduce((scopes: string[], authorization: Authorization) => {
+    return [...scopes, ...authorization.scopes];
+  }, []);
+  const allAllowedScopes = unfilteredScopes.filter((scope, index) => unfilteredScopes.indexOf(scope) === index);
+
+  // Check requested scopes
+  if (requestedScopes) {
+    const allowedScopes = requestedScopes.split(' ').filter(scope => allAllowedScopes.includes(scope));
+    if (!allowedScopes || allowedScopes.length == 0) {
+      throw new InvalidScope('There are no scopes in the request this client is authorized for');
+    }
+    return allowedScopes;
   }
 
-  const allowedScopes = requestedScopes.split(' ').filter(scope => client.scopes.includes(scope));
-  if (!allowedScopes || allowedScopes.length == 0) {
-    throw new InvalidScope('There are no scopes in the request this client is authorized for');
-  }
-
-  return allowedScopes;
+  // Default to all allowed scopes for this client
+  return allAllowedScopes;
 }
 
 export async function tokenResponse(scopes: string[], clientId: string, privateKeyParam: string) : Promise<APIGatewayProxyResult> {
+
 
   const now = new Date();
   const exp = new Date();
   exp.setHours(now.getHours() + 1);
 
-  // if (!privateKey) {
-  //   throw Error('No private key for signing');
-  // }
-
   const token = await new SignJWT({
     aud: clientId,
-    iss: `${process.env.ISSUER}/oauth`,
+    iss: `https://${process.env.ISSUER}/oauth`,
     iat: Math.floor(now.getTime() / 1000),
     exp: Math.floor(exp.getTime() / 1000),
     sub: clientId,

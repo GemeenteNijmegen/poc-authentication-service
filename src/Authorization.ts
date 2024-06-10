@@ -4,6 +4,11 @@
  */
 export interface ClientConfiguration {
   secret: string;
+  authorizations: Authorization[];
+}
+
+export interface Authorization {
+  endpoint: string;
   scopes: string[];
 }
 
@@ -13,16 +18,32 @@ export interface ClientConfiguration {
 export const clients: Record<string, ClientConfiguration> = {
   readClient: {
     secret: 'geheim',
-    scopes: ['read'],
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['read'],
+      },
+    ],
   },
   writeClient: {
     secret: 'geheim',
-    scopes: ['write'],
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['write'],
+      },
+    ],
   },
   adminClient: {
     secret: 'geheim',
-    scopes: ['read', 'write'],
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['read', 'write'],
+      },
+    ],
   },
+
 };
 
 /**
