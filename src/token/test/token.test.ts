@@ -1,6 +1,6 @@
 import { AWS } from '@gemeentenijmegen/utils';
 import { ClientConfiguration } from '../../Authorization';
-import { authenticateRequest, scopesFromClientConfiguration } from '../token.lambda';
+import { audiencesFromClientConfiguration, authenticateRequest, scopesFromClientConfiguration } from '../token.lambda';
 
 jest.spyOn(AWS, 'getSecret').mockResolvedValue(
   'abc',
@@ -96,5 +96,51 @@ describe('Scope tests', () => {
 
   test('Three scopes in config, two duplicate', async() => {
     expect(scopesFromClientConfiguration(duplicateClient)).toEqual(['read', 'write', 'admin']);
+  });
+});
+
+describe('Audience tests', () => {
+  const readClient: ClientConfiguration = {
+    secret: 'geheim',
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['read'],
+      },
+    ],
+  };
+  const adminClient: ClientConfiguration = {
+    secret: 'geheim',
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['read', 'write'],
+      },
+    ],
+  };
+
+  const duplicateClient: ClientConfiguration = {
+    secret: 'geheim',
+    authorizations: [
+      {
+        endpoint: 'example-api',
+        scopes: ['read', 'write'],
+      },
+      {
+        endpoint: 'example-api-2',
+        scopes: ['read', 'write', 'admin'],
+      },
+    ],
+  };
+  test('One scopes in config', async() => {
+    expect(audiencesFromClientConfiguration(readClient)).toEqual(['example-api']);
+  });
+
+  test('Two scopes in config', async() => {
+    expect(audiencesFromClientConfiguration(adminClient)).toEqual(['example-api']);
+  });
+
+  test('Three scopes in config, two duplicate', async() => {
+    expect(audiencesFromClientConfiguration(duplicateClient)).toEqual(['example-api', 'example-api-2']);
   });
 });

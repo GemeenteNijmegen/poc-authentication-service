@@ -71,6 +71,15 @@ export function scopesFromClientConfiguration(configuration: ClientConfiguration
   return unfilteredScopes.filter((scope, index) => unfilteredScopes.indexOf(scope) === index);
 }
 
+
+export function audiencesFromClientConfiguration(configuration: ClientConfiguration) {
+  const unfilteredAudiences = configuration.authorizations.reduce((audiences: string[], authorization: Authorization) => {
+    return [...audiences, authorization.endpoint];
+  }, []);
+  return unfilteredAudiences.filter((audience, index) => unfilteredAudiences.indexOf(audience) === index);
+}
+
+
 export async function tokenResponse(scopes: string[], clientId: string, privateKeyParam: string) : Promise<APIGatewayProxyResult> {
 
 
@@ -79,7 +88,7 @@ export async function tokenResponse(scopes: string[], clientId: string, privateK
   exp.setHours(now.getHours() + 1);
 
   const token = await new SignJWT({
-    aud: clientId,
+    aud: audiencesFromClientConfiguration(clients[clientId]),
     iss: `https://${process.env.ISSUER}/oauth`,
     iat: Math.floor(now.getTime() / 1000),
     exp: Math.floor(exp.getTime() / 1000),

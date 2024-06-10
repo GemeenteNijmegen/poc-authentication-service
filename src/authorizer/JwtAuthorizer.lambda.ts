@@ -2,9 +2,7 @@ import { APIGatewayAuthorizerCallback, APIGatewayRequestAuthorizerEvent } from '
 import * as jose from 'jose';
 
 const configuration = {
-  audience: [
-    'example-api',
-  ],
+  audience: 'example-api',
   endpoints: [
     {
       method: 'GET',
@@ -53,7 +51,10 @@ async function validateJwt(jwt: string, event: APIGatewayRequestAuthorizerEvent)
     throw Error('No subject found in token');
   }
 
-  if (result.payload.aud != configuration.audience) {
+
+  if (Array.isArray(result.payload.aud) && !result.payload.aud?.includes(configuration.audience)) {
+    throw Error('Wrong audience');
+  } else if (result.payload.aud != configuration.audience) {
     throw Error('Wrong audience');
   }
 
