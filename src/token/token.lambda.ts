@@ -1,187 +1,38 @@
-import * as crypto from 'crypto';
 import { AWS } from '@gemeentenijmegen/utils';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { SignJWT } from 'jose';
-import { InvalidClient, InvalidRequest, InvalidScope, OAuthError, UnauthorizedClient, UnsupportedGrantType } from './Errors';
-import { Authorization, ClientConfiguration, clients, knownScopes } from '../Authorization';
+import { TokenEndpointHandler } from './TokenEndpointHandler';
 
-
-let privateKey: string | undefined = undefined;
-
+let tokenEndpointHandler : undefined | TokenEndpointHandler = undefined;
 async function init() {
-  privateKey = await AWS.getSecret(process.env.PRIVATE_KEY_ARN!);
+  const issuer = process.env.ISSUER!;
+  const privateKey = await AWS.getSecret(process.env.PRIVATE_KEY_ARN!);
+  tokenEndpointHandler = new TokenEndpointHandler(privateKey, [], {}, issuer);
 }
 const initalization = init();
 
-export async function handler(event: APIGatewayProxyEvent) : Promise<APIGatewayProxyResult> {
-  console.log(event);
 
+export async function handler(event: APIGatewayProxyEvent) : Promise<APIGatewayProxyResult> {
   await initalization;
 
-  if (!privateKey) {
-    throw Error('Whaaa');
+  if (!tokenEndpointHandler) {
+    return response({}, 500);
   }
 
-  try {
-    validateRequest(event);
-    const clientId = authenticateRequest(event);
-    const scopes = authorizedScopes(event, clients[clientId]);
-    return await tokenResponse(scopes, clientId, privateKey);
-  } catch (error) {
-    console.error(error);
-    if (error instanceof OAuthError) {
-      return {
-        statusCode: error.httpCode,
-        body: JSON.stringify({ error: error.error, description: error.description }),
-      };
-    }
-
-    return {
-      statusCode: 500,
-      body: 'unhandled error',
-    };
-  }
-
+  const tokenResponse = await tokenEndpointHandler.handle({
+    authorizationHeader: event.headers?.Authorization,
+    params: new URLSearchParams(event.body ?? ''),
+  });
+  return response(tokenResponse);
 }
 
-export function authorizedScopes(request: APIGatewayProxyEvent, client: ClientConfiguration) {
-  const body = new URLSearchParams(request.body!);
-  const requestedScopes = body.get('scope');
-
-  // All scopes allowed for this client
-  const allAllowedScopes = scopesFromClientConfiguration(client);
-
-  // Check requested scopes
-  if (requestedScopes) {
-    const allowedScopes = requestedScopes.split(' ').filter(scope => allAllowedScopes.includes(scope));
-    if (!allowedScopes || allowedScopes.length == 0) {
-      throw new InvalidScope('There are no scopes in the request this client is authorized for');
-    }
-    return allowedScopes;
-  }
-
-  // Default to all allowed scopes for this client
-  return allAllowedScopes;
-}
-
-export function scopesFromClientConfiguration(configuration: ClientConfiguration) {
-  const unfilteredScopes = configuration.authorizations.reduce((scopes: string[], authorization: Authorization) => {
-    return [...scopes, ...authorization.scopes];
-  }, []);
-  return unfilteredScopes.filter((scope, index) => unfilteredScopes.indexOf(scope) === index);
-}
-
-
-export function audiencesFromClientConfiguration(configuration: ClientConfiguration) {
-  const unfilteredAudiences = configuration.authorizations.reduce((audiences: string[], authorization: Authorization) => {
-    return [...audiences, authorization.endpoint];
-  }, []);
-  return unfilteredAudiences.filter((audience, index) => unfilteredAudiences.indexOf(audience) === index);
-}
-
-
-export async function tokenResponse(scopes: string[], clientId: string, privateKeyParam: string) : Promise<APIGatewayProxyResult> {
-
-
-  const now = new Date();
-  const exp = new Date();
-  exp.setHours(now.getHours() + 1);
-
-  const token = await new SignJWT({
-    aud: audiencesFromClientConfiguration(clients[clientId]),
-    iss: `https://${process.env.ISSUER}/oauth`,
-    iat: Math.floor(now.getTime() / 1000),
-    exp: Math.floor(exp.getTime() / 1000),
-    sub: clientId,
-    scope: scopes.join(' '),
-    jti: crypto.randomUUID(),
-  }).setProtectedHeader({
-    alg: 'RS256',
-    typ: 'JWT',
-    kid: '0aa559a8-d56f-424c-b9bd-9dd598c3cf15',
-  }).sign(crypto.createPrivateKey({
-    key: privateKeyParam,
-    format: 'pem',
-  }));
-
-
-  const response = {
-    token_type: 'Bearer',
-    access_token: token,
-    scope: scopes,
-    expires_in: 3600,
-    refresh_token: undefined, // Not allowed in the client_credentials grant type
-  };
-
+function response(body: any, code = 200) {
   return {
-    body: JSON.stringify(response, null, 4),
-    statusCode: 200,
+    body: JSON.stringify(body, null, 4),
+    statusCode: code,
     headers: {
       'Content-Type': 'application/json;charset=UTF-8',
       'Cache-Control': 'no-store',
       'Pragma': 'no-cache',
     },
-  };
-
-}
-
-export function validateRequest(request: APIGatewayProxyEvent) {
-
-  if (!request.body) {
-    throw new InvalidRequest('Missing request body');
-  }
-
-  const body = new URLSearchParams(request.body);
-
-  if (body.get('grant_type') !== 'client_credentials') {
-    throw new UnsupportedGrantType('Only client_credentials grant type is supported');
-  }
-
-  if (body.get('scope') !== null) {
-    const unallowedScope = body.get('scope')?.split(' ').find(scope => !knownScopes.includes(scope));
-    if (unallowedScope) {
-      throw new InvalidScope(`Scope ${unallowedScope} is invalid`);
-    }
-  }
-
-}
-
-export function authenticateRequest(request: APIGatewayProxyEvent) {
-
-  // Check body for credentials
-  const body = new URLSearchParams(request.body!);
-  let credentials = {
-    client_id: body.get('client_id'),
-    client_secret: body.get('client_secret'),
-  };
-
-  // Check if basic authentication is used
-  const authHeader = request.headers?.Authorization;
-  if (authHeader) {
-    credentials = parseAuthenticationHeader(authHeader);
-  }
-
-  // Validate credentials
-  if (!credentials.client_id || !credentials.client_secret) {
-    throw new InvalidClient('No client credentials provided');
-  }
-
-  // Lookup credentials in client list
-  if (clients[credentials.client_id].secret !== credentials.client_secret) {
-    throw new UnauthorizedClient('Invalid client credentials');
-  }
-
-  return credentials.client_id;
-}
-
-function parseAuthenticationHeader(header: string) {
-  if (!header.startsWith('Basic ')) {
-    throw Error('Only basic authentication is supported');
-  }
-  const decoded = Buffer.from(header.substring(6), 'base64').toString('utf-8');
-  const parts = decoded.split(':');
-  return {
-    client_id: parts[0],
-    client_secret: parts[1],
   };
 }
