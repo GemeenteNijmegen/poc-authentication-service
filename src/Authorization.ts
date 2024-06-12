@@ -7,46 +7,47 @@ export interface ClientConfiguration {
   authorizations: Authorization[];
 }
 
+/**
+ * Describes an endpoint and posible allowed scopes per client
+ */
 export interface Authorization {
-  endpoint: string;
-  scopes: string[];
+  application: Application;
+  allowedScopes: string[];
 }
+
+export interface Application {
+  audience: string;
+  availableScopes: string[];
+}
+
+
+/**
+ * A list of applications
+ */
+export const applications: Application[] = [
+  {
+    audience: 'api.submissionstorage-dev.csp-nijmegen.nl',
+    availableScopes: ['list-overviews', 'generate-form-overview', 'download-form-overview', 'list-submissions'],
+  },
+];
 
 /**
  * A map of client ids and secrets
  */
 export const clients: Record<string, ClientConfiguration> = {
-  readClient: {
-    secret: 'geheim',
+  '376a1705-651b-4d8a-809e-b7563142ebde': {
+    secret: '0f68cf72-75ad-45ed-b7d1-e9cba35694aa',
     authorizations: [
       {
-        endpoint: 'example-api',
-        scopes: ['read'],
+        application: applications[0],
+        allowedScopes: ['list-overviews', 'generate-form-overview', 'download-form-overview'],
       },
     ],
   },
-  writeClient: {
-    secret: 'geheim',
-    authorizations: [
-      {
-        endpoint: 'example-api',
-        scopes: ['write'],
-      },
-    ],
-  },
-  adminClient: {
-    secret: 'geheim',
-    authorizations: [
-      {
-        endpoint: 'example-api',
-        scopes: ['read', 'write'],
-      },
-    ],
-  },
-
 };
 
-/**
- * Supported scopes
- */
-export const knownScopes = ['read', 'write'];
+export function getKnownScopes() {
+  return applications.reduce((scopes: string[], app: Application) => {
+    return [...scopes, ...app.audience];
+  }, []);
+}

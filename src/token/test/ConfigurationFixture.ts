@@ -1,4 +1,13 @@
-import { ClientConfiguration } from '../../Authorization';
+import { Application, ClientConfiguration } from '../../Authorization';
+
+const app: Application = {
+  audience: 'example-api',
+  availableScopes: ['read', 'write'],
+};
+const app2: Application = {
+  audience: 'example-api-2',
+  availableScopes: ['read', 'write', 'admin'],
+};
 
 /**
  * A map of client ids and secrets
@@ -8,8 +17,8 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
     secret: 'geheim',
     authorizations: [
       {
-        endpoint: 'example-api',
-        scopes: ['read'],
+        application: app,
+        allowedScopes: ['read'],
       },
     ],
   },
@@ -17,8 +26,8 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
     secret: 'geheim',
     authorizations: [
       {
-        endpoint: 'example-api',
-        scopes: ['write'],
+        application: app,
+        allowedScopes: ['write'],
       },
     ],
   },
@@ -26,8 +35,8 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
     secret: 'geheim',
     authorizations: [
       {
-        endpoint: 'example-api',
-        scopes: ['read', 'write'],
+        application: app,
+        allowedScopes: ['read', 'write'],
       },
     ],
   },
@@ -35,12 +44,12 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
     secret: 'geheim',
     authorizations: [
       {
-        endpoint: 'example-api',
-        scopes: ['read', 'write'],
+        application: app,
+        allowedScopes: ['read', 'write'],
       },
       {
-        endpoint: 'example-api-2',
-        scopes: ['read', 'write', 'admin'],
+        application: app2,
+        allowedScopes: ['read', 'write', 'admin'],
       },
     ],
   },

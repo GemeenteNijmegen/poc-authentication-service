@@ -120,6 +120,7 @@ export class TokenEndpointHandler {
     const client_secret = request.params.get('client_secret');
     const authorization = request.authorizationHeader;
 
+
     if ((client_id || client_secret) && authorization) {
       throw new InvalidRequest('Cannot use client_credentials via basic auth and in request body simultaniously');
     }
@@ -132,6 +133,8 @@ export class TokenEndpointHandler {
     if (!credentials.client_id || !credentials.client_secret) {
       throw new InvalidClient('Please provide client_id and client_secret');
     }
+
+    console.log('Trying to authenticate client', credentials.client_id);
 
     if (this.clients[credentials.client_id].secret !== credentials.client_secret) {
       throw new UnauthorizedClient('Invalid client credentials');

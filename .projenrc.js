@@ -9,6 +9,7 @@ const project = new GemeenteNijmegenCdkApp({
     '@gemeentenijmegen/aws-constructs',
     '@gemeentenijmegen/utils',
     'jose',
+    'zod',
   ],
   name: 'authentication-service',
   gitignore: [

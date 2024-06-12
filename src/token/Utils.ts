@@ -26,7 +26,7 @@ export class Utils {
    */
   static scopesFromClientConfiguration(configuration: ClientConfiguration) {
     const unfilteredScopes = configuration.authorizations.reduce((scopes: string[], authorization: Authorization) => {
-      return [...scopes, ...authorization.scopes];
+      return [...scopes, ...authorization.allowedScopes];
     }, []);
     return unfilteredScopes.filter((scope, index) => unfilteredScopes.indexOf(scope) === index);
   }
@@ -38,7 +38,7 @@ export class Utils {
    */
   static audiencesFromClientConfiguration(configuration: ClientConfiguration) {
     const unfilteredAudiences = configuration.authorizations.reduce((audiences: string[], authorization: Authorization) => {
-      return [...audiences, authorization.endpoint];
+      return [...audiences, authorization.application.audience];
     }, []);
     return unfilteredAudiences.filter((audience, index) => unfilteredAudiences.indexOf(audience) === index);
   }
