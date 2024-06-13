@@ -1,10 +1,10 @@
-import { Application, ClientConfiguration } from '../../Authorization';
+import { ResourceServer, ClientConfiguration } from '../../Authorization';
 
-const app: Application = {
+const app: ResourceServer = {
   audience: 'example-api',
   availableScopes: ['read', 'write'],
 };
-const app2: Application = {
+const app2: ResourceServer = {
   audience: 'example-api-2',
   availableScopes: ['read', 'write', 'admin'],
 };
@@ -17,7 +17,7 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
     secret: 'geheim',
     authorizations: [
       {
-        application: app,
+        resourceServer: app,
         allowedScopes: ['read'],
       },
     ],
@@ -26,7 +26,7 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
     secret: 'geheim',
     authorizations: [
       {
-        application: app,
+        resourceServer: app,
         allowedScopes: ['write'],
       },
     ],
@@ -35,7 +35,7 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
     secret: 'geheim',
     authorizations: [
       {
-        application: app,
+        resourceServer: app,
         allowedScopes: ['read', 'write'],
       },
     ],
@@ -44,18 +44,13 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
     secret: 'geheim',
     authorizations: [
       {
-        application: app,
+        resourceServer: app,
         allowedScopes: ['read', 'write'],
       },
       {
-        application: app2,
+        resourceServer: app2,
         allowedScopes: ['read', 'write', 'admin'],
       },
     ],
   },
 };
-
-/**
- * Supported scopes
- */
-export const KNOWN_SCOPES = ['read', 'write'];

@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
-import { SignJWT } from 'jose';
-import { InvalidClient, InvalidRequest, InvalidScope, OAuthError, UnauthorizedClient, UnsupportedGrantType } from './Errors';
+import { SignJWT, createRemoteJWKSet, decodeJwt, jwtVerify } from 'jose';
+import { InvalidClient, InvalidRequest, InvalidScope, InvalidTarget, OAuthError, UnauthorizedClient, UnsupportedGrantType } from './Errors';
 import { Utils } from './Utils';
 import { ClientConfiguration } from '../Authorization';
 
@@ -48,7 +48,6 @@ export interface TokenEndpointResponse {
 export class TokenEndpointHandler {
 
   private readonly privateKey: string;
-  private readonly knownScopes: string[];
   private readonly clients: Record<string, ClientConfiguration>;
   private readonly issuer: string;
 
@@ -57,20 +56,23 @@ export class TokenEndpointHandler {
    * signing jwt tokens
    * @param privateKey
    */
-  constructor(privateKey: string, knownScopes: string[], clients: Record<string, ClientConfiguration>, issuer: string) {
+  constructor(privateKey: string, clients: Record<string, ClientConfiguration>, issuer: string) {
     this.privateKey = privateKey;
-    this.knownScopes = knownScopes;
     this.issuer = issuer;
     this.clients = clients;
   }
 
-
   async handle(request: TokenEndpointRequest) {
     try {
       const clientId = this.authenticateRequest(request);
-      this.validateRequest(request);
-      const issuedScopes = this.authorizeRequestedScopes(request, this.clients[clientId]);
-      return await this.tokenResponse(issuedScopes, clientId, this.privateKey);
+      const grant_type = request.params.get('grant_type');
+      if (grant_type == 'client_credentials') {
+        return await this.handleClientCredentialsRequest(request, clientId);
+      } else if (grant_type == 'urn:ietf:params:oauth:grant-type:token-exchange') {
+        return await this.handleTokenExchangeRequest(request, clientId);
+      }
+      throw new UnsupportedGrantType('Only client_credentials and token-exhange grant types are supported');
+
     } catch (error) {
       console.error(error);
       if (error instanceof OAuthError) {
@@ -86,28 +88,66 @@ export class TokenEndpointHandler {
     }
   }
 
-  /**
-   * Checks if the request is the right grant_type and
-   * if the scopes in the request are known.
-   * @param request
-   */
-  validateRequest(request: TokenEndpointRequest) {
+  async handleClientCredentialsRequest(request: TokenEndpointRequest, clientId: string) {
+    const issuedScopes = this.authorizeRequestedScopes(request, this.clients[clientId]);
+    return this.tokenResponse(issuedScopes, clientId, this.privateKey);
+  }
 
-    // Check if client_credentials grant_type is used
-    const grant_type = request.params.get('grant_type');
-    if (grant_type !== 'client_credentials') {
-      throw new UnsupportedGrantType('Only client_credentials grant type is supported');
+  async handleTokenExchangeRequest(request: TokenEndpointRequest, clientId: string) {
+    this.validateTokenExchangeRequest(request);
+    const unsafeSubjectTokenString = request.params.get('subject_token');
+    if (!unsafeSubjectTokenString) {
+      throw new InvalidRequest('No subject token provided');
     }
+    const subjectToken = await this.validatedSubjectToken(unsafeSubjectTokenString, clientId);
+    // Nu token exchange doen
+    console.log(clientId, subjectToken);
 
-    // Check if scopes is known
-    const scopes = request.params.get('scope');
-    if (scopes) {
-      const unallowedScope = scopes.split(' ').find(scope => this.knownScopes.includes(scope));
-      if (unallowedScope) {
-        throw new InvalidScope(`Scope ${unallowedScope} is invalid`);
+    // const issuedScopes = this.authorizeRequestedScopesForTokenRequest(request, this.clients[clientId]);
+  }
+
+  validateTokenExchangeRequest(request: TokenEndpointRequest) {
+    const required_params = ['subject_token', 'subject_token_type'];
+    for (let param of required_params) {
+      if (!request.params.get(param)) {
+        throw new InvalidRequest(`Missing required parameter ${param}`);
       }
     }
+  }
 
+  async validatedSubjectToken(tokenString: string, clientId: string) {
+    const client = this.clients[clientId];
+    const unsafeToken = decodeJwt(tokenString);
+    const issuer = unsafeToken.iss;
+    const exchange = client.tokenExchanges?.find(possibleExchange => possibleExchange.trustedIssuer === issuer);
+    if (!exchange) {
+      throw new InvalidRequest('Untrusted token issuer');
+    }
+
+    const jwks = createRemoteJWKSet(new URL(`${issuer}/certs`)); //TODO: discovery
+    const result = await jwtVerify(tokenString, jwks, {
+      issuer: issuer,
+    });
+    const claims = exchange.mapping(result.payload);
+
+    return result;
+
+    // if (Array.isArray(result.payload.aud) && !result.payload.aud?.includes(configuration.audience)) {
+    //   throw Error('Wrong audience');
+    // } else if (result.payload.aud != configuration.audience) {
+    //   throw Error('Wrong audience');
+    // }
+
+    // const requirements = getEndpointAuthorizationRequirements(event.path, event.httpMethod);
+
+    // console.log('Auth requirements', requirements);
+
+    // const scopes = (result.payload.scope as string);
+    // if (scopes && scopes.split(' ').find(scope => scope == requirements.requiredScope)) {
+    //   return result.payload.sub;
+    // }
+
+    // throw new Unauthorized();
   }
 
   /**
@@ -116,7 +156,6 @@ export class TokenEndpointHandler {
    * @returns the client_id if authentication is succesful
    */
   authenticateRequest(request: TokenEndpointRequest) {
-    const client_id = request.params.get('client_id');
     const client_secret = request.params.get('client_secret');
     const authorization = request.authorizationHeader;
 
@@ -165,7 +204,7 @@ export class TokenEndpointHandler {
     return allAllowedScopes;
   }
 
-  async tokenResponse(scopes: string[], clientId: string, privateKeyParam: string) : Promise<TokenEndpointResponse> {
+  async tokenResponse(scopes: string[], clientId: string, privateKeyParam: string): Promise<TokenEndpointResponse> {
 
     const now = new Date();
     const exp = new Date();

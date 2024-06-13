@@ -1,13 +1,13 @@
 import { AWS } from '@gemeentenijmegen/utils';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { TokenEndpointHandler } from './TokenEndpointHandler';
-import { clients, getKnownScopes } from '../Authorization';
+import { clients } from '../Authorization';
 
 let tokenEndpointHandler : undefined | TokenEndpointHandler = undefined;
 async function init() {
   const issuer = process.env.ISSUER!;
   const privateKey = await AWS.getSecret(process.env.PRIVATE_KEY_ARN!);
-  tokenEndpointHandler = new TokenEndpointHandler(privateKey, getKnownScopes(), clients, issuer);
+  tokenEndpointHandler = new TokenEndpointHandler(privateKey, clients, issuer);
 }
 const initalization = init();
 
