@@ -1,4 +1,4 @@
-type Errors = 'invalid_request' | 'invalid_client' | 'invalid_grant' | 'unauthorized_client' | 'unsupported_grant_type' | 'invalid_scope';
+type Errors = 'invalid_request' | 'invalid_client' | 'invalid_grant' | 'unauthorized_client' | 'unsupported_grant_type' | 'invalid_scope' | 'invalid_target';
 
 export abstract class OAuthError extends Error {
   readonly error: Errors;
@@ -16,6 +16,12 @@ export abstract class OAuthError extends Error {
 export class InvalidRequest extends OAuthError {
   constructor(description?: string) {
     super('invalid_request', description, 400);
+  }
+}
+
+export class InvalidTarget extends OAuthError {
+  constructor(description?: string) {
+    super('invalid_target', description, 400);
   }
 }
 

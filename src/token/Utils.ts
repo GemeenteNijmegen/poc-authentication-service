@@ -38,7 +38,7 @@ export class Utils {
    */
   static audiencesFromClientConfiguration(configuration: ClientConfiguration) {
     const unfilteredAudiences = configuration.authorizations.reduce((audiences: string[], authorization: Authorization) => {
-      return [...audiences, authorization.application.audience];
+      return [...audiences, authorization.resourceServer.audience];
     }, []);
     return unfilteredAudiences.filter((audience, index) => unfilteredAudiences.indexOf(audience) === index);
   }

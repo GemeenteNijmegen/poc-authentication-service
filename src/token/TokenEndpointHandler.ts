@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { SignJWT } from 'jose';
+import { SignJWT, createRemoteJWKSet, decodeJwt, jwtVerify } from 'jose';
 import { InvalidClient, InvalidRequest, InvalidScope, OAuthError, UnauthorizedClient, UnsupportedGrantType } from './Errors';
 import { Utils } from './Utils';
 import { ClientConfiguration } from '../Authorization';
@@ -48,7 +48,6 @@ export interface TokenEndpointResponse {
 export class TokenEndpointHandler {
 
   private readonly privateKey: string;
-  private readonly knownScopes: string[];
   private readonly clients: Record<string, ClientConfiguration>;
   private readonly issuer: string;
 
@@ -57,22 +56,24 @@ export class TokenEndpointHandler {
    * signing jwt tokens
    * @param privateKey
    */
-  constructor(privateKey: string, knownScopes: string[], clients: Record<string, ClientConfiguration>, issuer: string) {
+  constructor(privateKey: string, clients: Record<string, ClientConfiguration>, issuer: string) {
     this.privateKey = privateKey;
-    this.knownScopes = knownScopes;
     this.issuer = issuer;
     this.clients = clients;
   }
 
-
   async handle(request: TokenEndpointRequest) {
     try {
       const clientId = this.authenticateRequest(request);
-      this.validateRequest(request);
-      const issuedScopes = this.authorizeRequestedScopes(request, this.clients[clientId]);
-      return await this.tokenResponse(issuedScopes, clientId, this.privateKey);
+      const grant_type = request.params.get('grant_type');
+      if (grant_type == 'client_credentials') {
+        return await this.handleClientCredentialsRequest(request, clientId);
+      } else if (grant_type == 'urn:ietf:params:oauth:grant-type:token-exchange') {
+        return await this.handleTokenExchangeRequest(request, clientId);
+      }
+      throw new UnsupportedGrantType('Only client_credentials and token-exhange grant types are supported');
+
     } catch (error) {
-      console.error(error);
       if (error instanceof OAuthError) {
         return {
           statusCode: error.httpCode,
@@ -86,28 +87,45 @@ export class TokenEndpointHandler {
     }
   }
 
-  /**
-   * Checks if the request is the right grant_type and
-   * if the scopes in the request are known.
-   * @param request
-   */
-  validateRequest(request: TokenEndpointRequest) {
+  async handleClientCredentialsRequest(request: TokenEndpointRequest, clientId: string) {
+    const issuedScopes = this.authorizeRequestedScopes(request, this.clients[clientId]);
+    return this.tokenResponse(issuedScopes, clientId, { sub: clientId }, this.privateKey );
+  }
 
-    // Check if client_credentials grant_type is used
-    const grant_type = request.params.get('grant_type');
-    if (grant_type !== 'client_credentials') {
-      throw new UnsupportedGrantType('Only client_credentials grant type is supported');
+  async handleTokenExchangeRequest(request: TokenEndpointRequest, clientId: string) {
+    const client = this.clients[clientId];
+    this.validateTokenExchangeRequest(request);
+    const unsafeSubjectTokenString = request.params.get('subject_token');
+    if (!unsafeSubjectTokenString) {
+      throw new InvalidRequest('No subject token provided');
+    }
+    const unsafeToken = decodeJwt(unsafeSubjectTokenString);
+    const issuer = unsafeToken.iss;
+    const exchange = client.tokenExchanges?.find(possibleExchange => possibleExchange.trustedIssuer === issuer);
+    if (!exchange) {
+      throw new InvalidRequest('Untrusted token issuer');
     }
 
-    // Check if scopes is known
-    const scopes = request.params.get('scope');
-    if (scopes) {
-      const unallowedScope = scopes.split(' ').find(scope => this.knownScopes.includes(scope));
-      if (unallowedScope) {
-        throw new InvalidScope(`Scope ${unallowedScope} is invalid`);
+    const jwks = createRemoteJWKSet(new URL(`${issuer}/certs`)); //TODO: discovery
+    const result = await jwtVerify(unsafeSubjectTokenString, jwks, {
+      issuer: issuer,
+    });
+    // Nu token exchange doen
+
+    const issuedScopes = this.authorizeRequestedScopes(request, this.clients[clientId]);
+    const claims = exchange.mapping(result.payload);
+    claims.sub = result.payload.sub; // Subject must be the same as provided sub
+
+    return this.tokenResponse(issuedScopes, clientId, claims, this.privateKey);
+  }
+
+  validateTokenExchangeRequest(request: TokenEndpointRequest) {
+    const required_params = ['subject_token', 'subject_token_type'];
+    for (let param of required_params) {
+      if (!request.params.get(param)) {
+        throw new InvalidRequest(`Missing required parameter ${param}`);
       }
     }
-
   }
 
   /**
@@ -165,18 +183,20 @@ export class TokenEndpointHandler {
     return allAllowedScopes;
   }
 
-  async tokenResponse(scopes: string[], clientId: string, privateKeyParam: string) : Promise<TokenEndpointResponse> {
-
+  async tokenResponse(scopes: string[], clientId: string, claims: Record<string, any>, privateKeyParam: string ): Promise<TokenEndpointResponse> {
+    if (!claims.sub) {
+      throw Error('Provided claims must contain sub');
+    }
     const now = new Date();
     const exp = new Date();
     exp.setSeconds(now.getSeconds() + TOKEN_LIFETIME_SECONDS);
 
     const token = await new SignJWT({
+      ...claims,
       aud: Utils.audiencesFromClientConfiguration(this.clients[clientId]),
       iss: `https://${this.issuer}/oauth`,
       iat: Math.floor(now.getTime() / 1000),
       exp: Math.floor(exp.getTime() / 1000),
-      sub: clientId,
       scope: scopes.join(' '),
       jti: crypto.randomUUID(),
     }).setProtectedHeader({
@@ -186,6 +206,7 @@ export class TokenEndpointHandler {
     }).sign(crypto.createPrivateKey({
       key: privateKeyParam,
       format: 'pem',
+      type: 'pkcs8',
     }));
 
 
