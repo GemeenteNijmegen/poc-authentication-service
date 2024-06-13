@@ -27,7 +27,7 @@ export interface Application {
 export const applications: Application[] = [
   {
     audience: 'api.submissionstorage-dev.csp-nijmegen.nl',
-    availableScopes: ['list-overviews', 'generate-form-overview', 'download-form-overview', 'list-submissions'],
+    availableScopes: ['form-overview', 'submissions'],
   },
 ];
 
@@ -40,7 +40,7 @@ export const clients: Record<string, ClientConfiguration> = {
     authorizations: [
       {
         application: applications[0],
-        allowedScopes: ['list-overviews', 'generate-form-overview', 'download-form-overview'],
+        allowedScopes: ['form-overview'],
       },
     ],
   },
