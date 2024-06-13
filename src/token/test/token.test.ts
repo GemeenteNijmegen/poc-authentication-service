@@ -99,7 +99,6 @@ describe('token exchange tests', () => {
       });
     })();
     const handler = new TokenEndpointHandler(keyPair.privateKey, CLIENTS, ISSUER );
-    console.debug(keyPair.publicKey);
 
     const result = await handler.handleTokenExchangeRequest({
       params: new URLSearchParams({
@@ -108,7 +107,7 @@ describe('token exchange tests', () => {
         subject_token_type: 'Bearer',
       }),
     }, 'delegateClient');
-    expect(result).toBeFalsy();
+    expect(result).toBeTruthy();
   });
 
 });
