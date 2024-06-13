@@ -1,13 +1,16 @@
 import { App } from 'aws-cdk-lib';
-import { AuthenticationServiceStack } from './AuthenticationServiceStack';
-
-const devEnv = {
-  account: '049753832279',
-  region: 'eu-central-1',
-};
+import { getConfiguration } from './Configuration';
+import { PipelineStack } from './PipelineStack';
 
 const app = new App();
+const branchToBuild = process.env.BRANCH_NAME ?? 'main';
+console.log(`building branch ${branchToBuild}`);
+const configuration = getConfiguration(branchToBuild);
 
-new AuthenticationServiceStack(app, 'authentication-service-stack', { env: devEnv });
-
+new PipelineStack(app, `pipeline-${configuration.branchName}`,
+  {
+    env: configuration.deployFromEnvironment,
+    configuration: configuration,
+  },
+);
 app.synth();

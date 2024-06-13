@@ -8,24 +8,26 @@ import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { JwtAuthorizerFunction } from './authorizer/JwtAuthorizer-function';
+import { Configurable } from './Configuration';
 import { SecureFunction } from './secure/secure-function';
 import { Statics } from './Statics';
 import { TokenFunction } from './token/token-function';
 import { JwksFunction } from './well-known/jwks/jwks-function';
 import { ConfigFunction } from './well-known/openid-configuration/config-function';
 
+export interface AuthenticationServiceStackProps extends StackProps, Configurable {}
 
 export class AuthenticationServiceStack extends Stack {
 
   private readonly subdomain: HostedZone;
 
-  constructor(scope: Construct, id: string, props: StackProps = {}) {
+  constructor(scope: Construct, id: string, props: AuthenticationServiceStackProps) {
     super(scope, id, props);
 
     Aspects.of(this).add(new PermissionsBoundaryAspect());
 
     // Setup a subdomain, certificate and REST API Gateway
-    this.subdomain = this.createSubdomain();
+    this.subdomain = this.createSubdomain(props);
     const api = new RestApi(this, 'api', {
       domainName: {
         domainName: this.subdomain.zoneName,
@@ -108,13 +110,13 @@ export class AuthenticationServiceStack extends Stack {
   }
 
 
-  createSubdomain() {
+  createSubdomain(props: AuthenticationServiceStackProps) {
     const accountHostedZone = HostedZone.fromHostedZoneAttributes(this, 'account-hostedzone', {
       hostedZoneId: StringParameter.valueForStringParameter(this, Statics.accountHostedZoneId),
       zoneName: StringParameter.valueForStringParameter(this, Statics.accountHostedZoneName),
     });
 
-    const subdomain = `authentication.${accountHostedZone.zoneName}`;
+    const subdomain = `${props.configuration.subdomain}.${accountHostedZone.zoneName}`;
     const hostedzone = new HostedZone(this, 'hostedzone', {
       zoneName: subdomain,
     });
