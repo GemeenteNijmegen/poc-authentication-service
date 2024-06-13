@@ -63,7 +63,7 @@ export const clients: Record<string, ClientConfiguration> = {
         mapping: (claims: Record<string, any>): Record<string, any> => {
           const bsn = claims.sub; //TODO: Yivi, eherkenning logic
           return {
-            bsn: bsn,
+            identifier: bsn,
             type: 'person',
           };
         },

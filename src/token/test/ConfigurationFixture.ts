@@ -22,6 +22,27 @@ export const CLIENTS: Record<string, ClientConfiguration> = {
       },
     ],
   },
+  delegateClient: {
+    secret: 'geheim',
+    authorizations: [
+      {
+        resourceServer: app,
+        allowedScopes: ['read'],
+      },
+    ],
+    tokenExchanges: [
+      {
+        trustedIssuer: 'https://authenticatie-accp.nijmegen.nl/broker/sp/oidc',
+        mapping: (claims: Record<string, any>): Record<string, any> => {
+          const bsn = claims.sub; //TODO: Yivi, eherkenning logic
+          return {
+            identifier: bsn,
+            type: 'person',
+          };
+        },
+      },
+    ],
+  },
   writeClient: {
     secret: 'geheim',
     authorizations: [

@@ -1,3 +1,5 @@
+import { generateKeyPair } from 'crypto';
+import * as util from 'util';
 import { CLIENTS } from './ConfigurationFixture';
 import { InvalidRequest } from '../Errors';
 import { TokenEndpointHandler } from '../TokenEndpointHandler';
@@ -80,23 +82,33 @@ describe('Authorize requested scopes', () => {
 
 
 describe('token exchange tests', () => {
-  const handler = new TokenEndpointHandler('', CLIENTS, ISSUER );
 
   test('Should request validates', async() => {
-    const credentials = Buffer.from('readClient:geheim', 'utf-8').toString('base64');
-    const header = `Basic ${credentials}`;
-    handler.validateRequest({
-      authorizationHeader: header,
+    const generate = util.promisify(generateKeyPair);
+    const keyPair = await (async () => {
+      return generate('rsa', {
+        modulusLength: 4096,
+        publicKeyEncoding: {
+          type: 'spki',
+          format: 'pem',
+        },
+        privateKeyEncoding: {
+          type: 'pkcs8',
+          format: 'pem',
+        },
+      });
+    })();
+    const handler = new TokenEndpointHandler(keyPair.privateKey, CLIENTS, ISSUER );
+    console.debug(keyPair.publicKey);
+
+    const result = await handler.handleTokenExchangeRequest({
       params: new URLSearchParams({
         grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
-        subject_token: 'tests',
+        subject_token: 'eyJraWQiOiJRMUl6T1JYZWo0cFRJTWhVM3lZaGtxNVpReWIzOU00bnVGb0h1LTQ0b2ZZIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI5MDAwMjYyMzYiLCJhdWQiOiJBYXdvb3RXNTc0TXFJTVJBZkFnemR2OGxoUVlMdUdZMyIsImFjciI6InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphYzpjbGFzc2VzOk1vYmlsZVR3b0ZhY3RvckNvbnRyYWN0Iiwic2ltdWxhdG9yLWF1dGhvcml6YXRpb24iOnRydWUsImFtciI6InNpbXVsYXRvciIsImlzcyI6Imh0dHBzOlwvXC9hdXRoZW50aWNhdGllLWFjY3AubmlqbWVnZW4ubmxcL2Jyb2tlclwvc3BcL29pZGMiLCJzdWJqZWN0X2lzc3VlciI6InNpbXVsYXRvciIsImV4cCI6MTcxODI4MDMyMiwiaWF0IjoxNzE4Mjc4NTIyfQ.KI7gJkG7aMCCJ1StXF-cUvXUbD6mDh2eOwa6c-tmUEjqdQm-4OUGsFd6yRi7ecXYnwNoHVF95ntgUgDGNtt6RLEuDu5rKhlo9923d4PPPXNS82IGu9m5ej22LYWzs5ZPLrBDaIWBjXoBYHRok1gbJl0AQPS5o8vgwJPVkTtX4WBGZ3B0iMbAaxvgeflHEF7_9kKLWPDnc0_ocwrbNkU2P_TzO1Z9CMkuNmObxZucvVzZQDuYh0W7ZiLb47SrxSR5Is2w_SFuiZW4b6wiNYj8JBbAhxze6XAhJN7HMGaLa8C1ogs4jB5KuniFX4jwazJ4dezylef4uEr1Ogh65k-erw',
         subject_token_type: 'Bearer',
       }),
-    });
-  });
-
-  test('Authorize provided JWT', async() => {
-    expect(handler.validatedSubjectToken('eyJraWQiOiJRMUl6T1JYZWo0cFRJTWhVM3lZaGtxNVpReWIzOU00bnVGb0h1LTQ0b2ZZIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI5MDAwMjYyMzYiLCJhdWQiOiJBYXdvb3RXNTc0TXFJTVJBZkFnemR2OGxoUVlMdUdZMyIsImFjciI6InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphYzpjbGFzc2VzOk1vYmlsZVR3b0ZhY3RvckNvbnRyYWN0Iiwic2ltdWxhdG9yLWF1dGhvcml6YXRpb24iOnRydWUsImFtciI6InNpbXVsYXRvciIsImlzcyI6Imh0dHBzOlwvXC9hdXRoZW50aWNhdGllLWFjY3AubmlqbWVnZW4ubmxcL2Jyb2tlclwvc3BcL29pZGMiLCJzdWJqZWN0X2lzc3VlciI6InNpbXVsYXRvciIsImV4cCI6MTcxODI3Mjk3NSwiaWF0IjoxNzE4MjcxMTc1fQ.QuAGOzu5mHdTuU4qemPldSt3ek6iPQcaE9gxdynn8mt5lJpoNQaIzi6-FycUsMOVToQE39ECMJ75SuW24PlzCczvklzxZuN4NyNPG29bATekGrIYDoXlW71mKf9Y6F_A0LbnFYtX3RyQeKW4TnKwQdCNJMNxDN4VTSwAxJjuk7gk0ghtN8KimU-8x-gazQmk_IIuRRY-bocagQ4iTL66_mdv7ScsYy3KK80Ven3i5FAoL2uD3loKODW1YuJIyg2cGT9-Tct9C7NiPQYg_5yU_LfWpfKqHghFSFPVI2x8d7-yRsJUHpfylLRD6Jj7EqEQV7DpgJQQTpR_2miIs7UTIg')).toBeTruthy();
+    }, 'delegateClient');
+    expect(result).toBeFalsy();
   });
 
 });
