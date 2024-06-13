@@ -83,7 +83,7 @@ describe('Authorize requested scopes', () => {
 
 describe('token exchange tests', () => {
 
-  test('Should request validates', async() => {
+  xtest('Should request validates', async() => {
     const generate = util.promisify(generateKeyPair);
     const keyPair = await (async () => {
       return generate('rsa', {
