@@ -4,7 +4,7 @@ import { AuthenticationServiceStack } from '../src/AuthenticationServiceStack';
 
 test('Snapshot', () => {
   const app = new App();
-  const stack = new AuthenticationServiceStack(app, 'test');
+  const stack = new AuthenticationServiceStack(app, 'test', { configuration: {} as any });
 
   const template = Template.fromStack(stack);
   expect(template.toJSON()).toMatchSnapshot();
