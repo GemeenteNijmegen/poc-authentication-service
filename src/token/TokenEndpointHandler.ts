@@ -156,6 +156,7 @@ export class TokenEndpointHandler {
    * @returns the client_id if authentication is succesful
    */
   authenticateRequest(request: TokenEndpointRequest) {
+    const client_id = request.params.get('client_id');
     const client_secret = request.params.get('client_secret');
     const authorization = request.authorizationHeader;
 
