@@ -3,6 +3,7 @@ import { Stack, StackProps, Tags, pipelines, Aspects, CfnParameter } from 'aws-c
 import { Construct } from 'constructs';
 import { AuthenticationServiceStage } from './AuthenticationServiceStage';
 import { Configurable, Configuration } from './Configuration';
+import { ParameterStage } from './ParameterStage';
 import { Statics } from './Statics';
 
 export interface PipelineStackProps extends StackProps, Configurable {}
@@ -22,11 +23,17 @@ export class PipelineStack extends Stack {
     const connectionArn = new CfnParameter(this, 'connectionArn');
     const source = this.connectionSource(connectionArn);
     const pipeline = this.pipeline(source);
-    const authenticationServiceStage = new AuthenticationServiceStage(
-      this,
-      'authentication-service-stage',
-      { env: this.configuration.deployToEnvironment, configuration: this.configuration },
-    );
+
+    const parameterStage = new ParameterStage(this, 'parameters', {
+      env: this.configuration.deployToEnvironment,
+      configuration: props.configuration,
+    });
+    pipeline.addStage(parameterStage);
+
+    const authenticationServiceStage = new AuthenticationServiceStage(this, 'authentication-service-stage', {
+      env: this.configuration.deployToEnvironment,
+      configuration: this.configuration,
+    });
     pipeline.addStage(authenticationServiceStage);
 
   }

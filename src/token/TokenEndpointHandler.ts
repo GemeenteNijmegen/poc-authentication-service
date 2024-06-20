@@ -47,17 +47,17 @@ export interface TokenEndpointResponse {
 
 export class TokenEndpointHandler {
 
-  private readonly privateKey: string;
+  private readonly signingKey: string;
   private readonly clients: Record<string, ClientConfiguration>;
   private readonly issuer: string;
 
   /**
    * Instantiate a token endpoint handler with a private key used for
    * signing jwt tokens
-   * @param privateKey
+   * @param signingKey
    */
-  constructor(privateKey: string, clients: Record<string, ClientConfiguration>, issuer: string) {
-    this.privateKey = privateKey;
+  constructor(signingKey: string, clients: Record<string, ClientConfiguration>, issuer: string) {
+    this.signingKey = signingKey;
     this.issuer = issuer;
     this.clients = clients;
   }
@@ -89,7 +89,7 @@ export class TokenEndpointHandler {
 
   async handleClientCredentialsRequest(request: TokenEndpointRequest, clientId: string) {
     const issuedScopes = this.authorizeRequestedScopes(request, this.clients[clientId]);
-    return this.tokenResponse(issuedScopes, clientId, { sub: clientId }, this.privateKey );
+    return this.tokenResponse(issuedScopes, clientId, { sub: clientId }, this.signingKey );
   }
 
   async handleTokenExchangeRequest(request: TokenEndpointRequest, clientId: string) {
@@ -116,7 +116,7 @@ export class TokenEndpointHandler {
     const claims = exchange.mapping(result.payload);
     claims.sub = result.payload.sub; // Subject must be the same as provided sub
 
-    return this.tokenResponse(issuedScopes, clientId, claims, this.privateKey);
+    return this.tokenResponse(issuedScopes, clientId, claims, this.signingKey);
   }
 
   validateTokenExchangeRequest(request: TokenEndpointRequest) {

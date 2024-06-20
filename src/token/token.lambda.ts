@@ -6,8 +6,21 @@ import { clients } from '../Authorization';
 let tokenEndpointHandler : undefined | TokenEndpointHandler = undefined;
 async function init() {
   const issuer = process.env.ISSUER!;
-  const privateKey = await AWS.getSecret(process.env.PRIVATE_KEY_ARN!);
-  tokenEndpointHandler = new TokenEndpointHandler(privateKey, clients, issuer);
+
+  // Load both keys
+  const [key1, key2] = await Promise.all([
+    AWS.getSecret(process.env.SINGING_PRIVATE_KEY1_ARN!),
+    AWS.getSecret(process.env.SINGING_PRIVATE_KEY2_ARN!),
+  ]);
+
+  // Default to key 1, but if key2 is configured use that
+  let keyToUse = key1;
+  if (key2 && key2.startsWith('-----BEGIN PRIVATE KEY-----')) {
+    keyToUse = key2;
+    console.log('Second signing key is configured so using that key. First key can now be rolled over...');
+  }
+
+  tokenEndpointHandler = new TokenEndpointHandler(keyToUse, clients, issuer);
 }
 const initalization = init();
 

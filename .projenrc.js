@@ -10,6 +10,8 @@ const project = new GemeenteNijmegenCdkApp({
     '@gemeentenijmegen/utils',
     'jose',
     'zod',
+    '@types/pem-jwk',
+    'pem-jwk',
   ],
   name: 'authentication-service',
   gitignore: [

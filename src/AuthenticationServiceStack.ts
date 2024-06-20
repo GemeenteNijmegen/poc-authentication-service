@@ -46,7 +46,7 @@ export class AuthenticationServiceStack extends Stack {
     const secure = api.root.addResource('secure');
     const oauth = api.root.addResource('oauth');
     const wellKnown = oauth.addResource('.well-known');
-    const jwksJson = wellKnown.addResource('jwks.json');
+    const jwksJson = wellKnown.addResource('jwks');
     const openidConfiguration = wellKnown.addResource('openid-configuration');
     const token = oauth.addResource('token');
 
@@ -68,21 +68,38 @@ export class AuthenticationServiceStack extends Stack {
   }
 
   tokenEndpoint() {
-    const privateKeySecret = new Secret(this, 'private-key', {
-      description: 'Private key for signing jwts',
+    const privateKeySecret1Arn = StringParameter.valueForStringParameter(this, Statics.ssmSigningPrivateKeyArn1);
+    const privateKeySecret2Arn = StringParameter.valueForStringParameter(this, Statics.ssmSigningPrivateKeyArn2);
+    const privateKeySecret1 = Secret.fromSecretAttributes(this, 'signing-private-key-1', {
+      secretPartialArn: privateKeySecret1Arn,
+    });
+    const privateKeySecret2 = Secret.fromSecretAttributes(this, 'signing-private-key-2', {
+      secretPartialArn: privateKeySecret2Arn,
     });
     const tokenFunction = new TokenFunction(this, 'tokens', {
       environment: {
-        PRIVATE_KEY_ARN: privateKeySecret.secretArn,
+        SINGING_PRIVATE_KEY1_ARN: privateKeySecret1Arn,
+        SINGING_PRIVATE_KEY2_ARN: privateKeySecret2Arn,
         ISSUER: this.subdomain.zoneName,
       },
     });
-    privateKeySecret.grantRead(tokenFunction);
+    privateKeySecret1.grantRead(tokenFunction);
+    privateKeySecret2.grantRead(tokenFunction);
     return tokenFunction;
   }
 
   jwksEndpoint() {
-    return new JwksFunction(this, 'jwks');
+    const cert1 = StringParameter.fromStringParameterName(this, 'cert1', Statics.ssmSigningCertificate1);
+    const cert2 = StringParameter.fromStringParameterName(this, 'cert2', Statics.ssmSigningCertificate2);
+    const jwks = new JwksFunction(this, 'jwks', {
+      environment: {
+        SSM_CERT1: Statics.ssmSigningCertificate1,
+        SSM_CERT2: Statics.ssmSigningCertificate1,
+      },
+    });
+    cert1.grantRead(jwks);
+    cert2.grantRead(jwks);
+    return jwks;
   }
 
   secureEndpoint() {
