@@ -46,12 +46,6 @@
       "description": "Prepare assets",
       "steps": [
         {
-          "spawn": "bundle:authorizer/JwtAuthorizer.lambda"
-        },
-        {
-          "spawn": "bundle:secure/secure.lambda"
-        },
-        {
           "spawn": "bundle:token/token.lambda"
         },
         {
@@ -59,42 +53,6 @@
         },
         {
           "spawn": "bundle:well-known/openid-configuration/config.lambda"
-        }
-      ]
-    },
-    "bundle:authorizer/JwtAuthorizer.lambda": {
-      "name": "bundle:authorizer/JwtAuthorizer.lambda",
-      "description": "Create a JavaScript bundle from src/authorizer/JwtAuthorizer.lambda.ts",
-      "steps": [
-        {
-          "exec": "esbuild --bundle src/authorizer/JwtAuthorizer.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/authorizer/JwtAuthorizer.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/*"
-        }
-      ]
-    },
-    "bundle:authorizer/JwtAuthorizer.lambda:watch": {
-      "name": "bundle:authorizer/JwtAuthorizer.lambda:watch",
-      "description": "Continuously update the JavaScript bundle from src/authorizer/JwtAuthorizer.lambda.ts",
-      "steps": [
-        {
-          "exec": "esbuild --bundle src/authorizer/JwtAuthorizer.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/authorizer/JwtAuthorizer.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/* --watch"
-        }
-      ]
-    },
-    "bundle:secure/secure.lambda": {
-      "name": "bundle:secure/secure.lambda",
-      "description": "Create a JavaScript bundle from src/secure/secure.lambda.ts",
-      "steps": [
-        {
-          "exec": "esbuild --bundle src/secure/secure.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/secure/secure.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/*"
-        }
-      ]
-    },
-    "bundle:secure/secure.lambda:watch": {
-      "name": "bundle:secure/secure.lambda:watch",
-      "description": "Continuously update the JavaScript bundle from src/secure/secure.lambda.ts",
-      "steps": [
-        {
-          "exec": "esbuild --bundle src/secure/secure.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/secure/secure.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/* --watch"
         }
       ]
     },

@@ -19,8 +19,6 @@
 /cdk.json linguist-generated
 /LICENSE linguist-generated
 /package.json linguist-generated
-/src/authorizer/JwtAuthorizer-function.ts linguist-generated
-/src/secure/secure-function.ts linguist-generated
 /src/token/token-function.ts linguist-generated
 /src/well-known/jwks/jwks-function.ts linguist-generated
 /src/well-known/openid-configuration/config-function.ts linguist-generated

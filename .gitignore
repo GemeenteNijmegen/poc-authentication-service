@@ -59,8 +59,6 @@ junit.xml
 /cdk.out/
 .cdk.staging/
 .parcel-cache/
-!/src/authorizer/JwtAuthorizer-function.ts
-!/src/secure/secure-function.ts
 !/src/token/token-function.ts
 !/src/well-known/jwks/jwks-function.ts
 !/src/well-known/openid-configuration/config-function.ts
