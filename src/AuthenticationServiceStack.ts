@@ -80,7 +80,7 @@ export class AuthenticationServiceStack extends Stack {
     const jwks = new JwksFunction(this, 'jwks', {
       environment: {
         SSM_CERT1: Statics.ssmSigningCertificate1,
-        SSM_CERT2: Statics.ssmSigningCertificate1,
+        SSM_CERT2: Statics.ssmSigningCertificate2,
       },
     });
     cert1.grantRead(jwks);
