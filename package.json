@@ -56,6 +56,8 @@
     "@gemeentenijmegen/apigateway-http": "^0.0.12",
     "@gemeentenijmegen/aws-constructs": "^0.0.11",
     "@gemeentenijmegen/utils": "^0.0.12",
+    "@trust/keyto": "^1.0.1",
+    "@types/": "trust/keyto",
     "@types/aws-lambda": "^8.10.138",
     "@types/pem-jwk": "^2.0.2",
     "aws-cdk-lib": "^2.1.0",
@@ -71,6 +73,15 @@
   "version": "0.0.0",
   "jest": {
     "coverageProvider": "v8",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/cdk.out",
+      "/test/playwright"
+    ],
+    "roots": [
+      "src",
+      "test"
+    ],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.ts?(x)",
       "<rootDir>/@(test|src)/**/*(*.)@(spec|test).ts?(x)"
@@ -86,10 +97,9 @@
     ],
     "coverageDirectory": "coverage",
     "coveragePathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "testPathIgnorePatterns": [
-      "/node_modules/"
+      "/node_modules/",
+      "/cdk.out",
+      "/test/playwright"
     ],
     "watchPathIgnorePatterns": [
       "/node_modules/"

@@ -88,6 +88,15 @@
       "type": "runtime"
     },
     {
+      "name": "@trust/keyto",
+      "type": "runtime"
+    },
+    {
+      "name": "@types/",
+      "version": "trust/keyto",
+      "type": "runtime"
+    },
+    {
       "name": "@types/aws-lambda",
       "type": "runtime"
     },

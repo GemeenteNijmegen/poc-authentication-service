@@ -12,10 +12,18 @@ const project = new GemeenteNijmegenCdkApp({
     'zod',
     '@types/pem-jwk',
     'pem-jwk',
+    '@trust/keyto',
+    '@types/@trust/keyto',
   ],
   name: 'authentication-service',
   gitignore: [
     'jwk',
   ],
+  jestOptions: {
+    jestConfig: {
+      testPathIgnorePatterns: ['/node_modules/', '/cdk.out', '/test/playwright'],
+      roots: ['src', 'test'],
+    },
+  },
 });
 project.synth();

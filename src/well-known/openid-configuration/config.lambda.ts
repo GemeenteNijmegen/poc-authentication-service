@@ -13,7 +13,7 @@ export async function handler(_event: APIGatewayProxyEvent) : Promise<APIGateway
         // 'tls_client_auth',
         'client_credentials', // Only supported for now (non complient with NL GOV OAuth 2.0 assurance profile)
       ],
-      jwks_uri: `${issuer}/.well-known/jwks.json`,
+      jwks_uri: `${issuer}/.well-known/jwks`,
       authorization_endpoint: undefined, // Not needed for client_credentials grant only (however, non complient now)
       grant_types_supported: ['client_credentials'],
       scopes_supported: ['test', 'test2'],

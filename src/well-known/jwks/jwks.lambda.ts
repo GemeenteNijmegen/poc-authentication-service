@@ -1,11 +1,10 @@
-import * as crypto from 'crypto';
 import { AWS } from '@gemeentenijmegen/utils';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import * as pemjwk from 'pem-jwk';
+import { pemToJwk } from './pem2jwk';
 
 // Initialization: build the jwks!
-let cert1: pemjwk.JWK<{kid: string}> | undefined = undefined;
-let cert2: pemjwk.JWK<{kid: string}> | undefined = undefined;
+let cert1: any = undefined;
+let cert2: any = undefined;
 const jwks = { keys: [] as any };
 async function init() {
   const cert1Pem = await AWS.getParameter(process.env.SSM_CERT1!);
@@ -32,12 +31,4 @@ export async function handler(_event: APIGatewayProxyEvent) : Promise<APIGateway
     },
     statusCode: 200,
   };
-}
-
-function pemToJwk(certificate: string) {
-  const x509 = new crypto.X509Certificate(certificate);
-  const jwk = pemjwk.pem2jwk(certificate, {
-    kid: x509.fingerprint256,
-  });
-  return jwk;
 }
