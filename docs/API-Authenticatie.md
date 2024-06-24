@@ -2,12 +2,13 @@
 Het DevOps team is in de innovatiesprint (3 tot 14 juni 2024) bezig geweest met API authenticatie en authorisatie. Dit document is bedoeld om een niet al te technisch te beschijven wat wij hebben gedaan en getest.
 
 ## Basis
-In de basis wat wij hebben gebouwd is een manier van [zero-trust authenticatie](https://www.ncsc.nl/actueel/weblog/weblog/2020/what-about-zero-trust). In de basis komt dit neer op `never trust, always verify`. 
+Wat wij hebben onderzocht is hoe wij een manier van [zero-trust authenticatie](https://www.ncsc.nl/actueel/weblog/weblog/2020/what-about-zero-trust) op onze eigen APIs kunnen toepassen. In de basis komt zero-truest neer op `never trust, always verify`. Ons doel hierbij is het leren over hoe deze standaarden werken en hoe wij dit kunnen toepassen om veiligheid te verbeteren alsmede aan standaarden te voldoen.
+
 
 ![Basis](./tokens.drawio.png)
 
 
-1. De gebruiker komt bij mijn-nijmegen en wordt doorgestuurd naar Signicat (onze authenticatie broaker).
+1. De gebruiker komt bij mijn-nijmegen en wordt doorgestuurd naar Signicat (onze authenticatie broker).
 2. De gebruiker logt in met DigiD en wordt teruggestuurd naar Signicat.
 3. Signicat geeft de gebruiker een token op de achtergrond.
 4. De gebruiker kan met dit token inloggen bij mijn-nijmegen. Daarbij wordt gecontroleerd of het token klopt (bij Signicat) en wie de gebruiker is op basis van de informatie in het token.
@@ -72,7 +73,7 @@ AuthenticatieService->>AuthenticatieService: Maak een nieuw token
 AuthenticatieService-->>-MijnNijmegen: Nieuw token
 
 MijnNijmegen->>+SubmissionStorage: Geef inzendingen voor gebruiker x (incl. Nieuw token)
-SubmissionStorage->>AuthenticatieService: Klopt dit token
+SubmissionStorage->>AuthenticatieService: Klopt dit token?
 AuthenticatieService-->>SubmissionStorage: 
 SubmissionStorage->>SubmissionStorage: Is het token van gebruiker x?
 SubmissionStorage-->>-MijnNijmegen: resultaten
