@@ -1,4 +1,4 @@
-import { Authorization, ClientConfiguration } from '../Authorization';
+import { Authorization, ClientConfiguration } from '../oauth/Authorization';
 
 
 export class Utils {

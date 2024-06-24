@@ -1,4 +1,5 @@
-import { ResourceServer, ClientConfiguration } from '../../Authorization';
+import { ClientConfiguration, ResourceServer } from '../../oauth/Authorization';
+
 
 const app: ResourceServer = {
   audience: 'example-api',

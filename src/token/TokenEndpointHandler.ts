@@ -1,8 +1,8 @@
 import * as crypto from 'crypto';
 import { SignJWT, createRemoteJWKSet, decodeJwt, jwtVerify } from 'jose';
-import { InvalidClient, InvalidRequest, InvalidScope, OAuthError, UnauthorizedClient, UnsupportedGrantType } from './Errors';
 import { Utils } from './Utils';
-import { ClientConfiguration } from '../Authorization';
+import { ClientConfiguration } from '../oauth/Authorization';
+import { InvalidClient, InvalidRequest, InvalidScope, OAuthError, UnauthorizedClient, UnsupportedGrantType } from '../oauth/Errors';
 
 const TOKEN_LIFETIME_SECONDS = 3600;
 

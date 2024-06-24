@@ -1,30 +1,4 @@
-
-/**
- * Configuration for each client
- */
-export interface ClientConfiguration {
-  secret: string;
-  authorizations: Authorization[];
-  tokenExchanges?: TokenExchange[];
-}
-
-/**
- * Describes an endpoint and posible allowed scopes per client
- */
-export interface Authorization {
-  resourceServer: ResourceServer;
-  allowedScopes: string[];
-}
-
-export interface ResourceServer {
-  audience: string;
-  availableScopes: string[];
-}
-
-interface TokenExchange {
-  trustedIssuer: string;
-  mapping: (claims: Record<string, any>) => Record<string, any>;
-}
+import { ClientConfiguration, ResourceServer } from './oauth/Authorization';
 
 /**
  * A list of applications
@@ -71,9 +45,3 @@ export const clients: Record<string, ClientConfiguration> = {
     ],
   },
 };
-
-export function getKnownScopes() {
-  return applications.reduce((scopes: string[], app: ResourceServer) => {
-    return [...scopes, ...app.audience];
-  }, []);
-}

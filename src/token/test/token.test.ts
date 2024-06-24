@@ -1,7 +1,7 @@
 import { generateKeyPair } from 'crypto';
 import * as util from 'util';
 import { CLIENTS } from './ConfigurationFixture';
-import { InvalidRequest } from '../Errors';
+import { InvalidRequest } from '../../oauth/Errors';
 import { TokenEndpointHandler } from '../TokenEndpointHandler';
 
 const ISSUER = 'example.com/custom-idp';
