@@ -69,9 +69,9 @@ MijnNijmegen-->>+AuthenticatieService: Token omruilen? (incl. token)
 AuthenticatieService->>Signicat: Klopt dit token?
 Signicat-->>AuthenticatieService: 
 AuthenticatieService->>AuthenticatieService: Maak een nieuw token
-AuthenticatieService-->>-MijnNijmegen: token
+AuthenticatieService-->>-MijnNijmegen: Nieuw token
 
-MijnNijmegen->>+SubmissionStorage: Geef inzendingen voor gebruiker x (incl. token)
+MijnNijmegen->>+SubmissionStorage: Geef inzendingen voor gebruiker x (incl. Nieuw token)
 SubmissionStorage->>AuthenticatieService: Klopt dit token
 AuthenticatieService-->>SubmissionStorage: 
 SubmissionStorage->>SubmissionStorage: Is het token van gebruiker x?
