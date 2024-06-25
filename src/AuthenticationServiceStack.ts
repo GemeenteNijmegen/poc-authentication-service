@@ -59,8 +59,7 @@ export class AuthenticationServiceStack extends Stack {
       renewalSchedule: Schedule.cron({
         minute: '0',
         hour: '3',
-        day: '0',
-        weekDay: '?',
+        day: '1',
       }),
     });
 
