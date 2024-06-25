@@ -5,15 +5,14 @@ export async function handler() {
   const s3 = new S3Client();
 
   const keys = crypto.generateKeyPairSync('rsa', {
-    modulusLength: 2048,
+    modulusLength: 4096,
     publicKeyEncoding: {
-      type: 'pkcs1',
+      type: 'spki',
       format: 'pem',
     },
     privateKeyEncoding: {
-      type: 'pkcs1',
+      type: 'pkcs8',
       format: 'pem',
-      passphrase: '',
     },
   });
 
