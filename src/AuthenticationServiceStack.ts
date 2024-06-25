@@ -5,7 +5,6 @@ import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatem
 import { Schedule } from 'aws-cdk-lib/aws-events';
 import { ARecord, HostedZone, NsRecord, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGateway } from 'aws-cdk-lib/aws-route53-targets';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { Configurable } from './Configuration';
@@ -68,23 +67,13 @@ export class AuthenticationServiceStack extends Stack {
   }
 
   tokenEndpoint() {
-    const privateKeySecret1Arn = StringParameter.valueForStringParameter(this, Statics.ssmSigningPrivateKeyArn1);
-    const privateKeySecret2Arn = StringParameter.valueForStringParameter(this, Statics.ssmSigningPrivateKeyArn2);
-    const privateKeySecret1 = Secret.fromSecretAttributes(this, 'signing-private-key-1', {
-      secretPartialArn: privateKeySecret1Arn,
-    });
-    const privateKeySecret2 = Secret.fromSecretAttributes(this, 'signing-private-key-2', {
-      secretPartialArn: privateKeySecret2Arn,
-    });
     const tokenFunction = new TokenFunction(this, 'tokens', {
       environment: {
-        SINGING_PRIVATE_KEY1_ARN: privateKeySecret1Arn,
-        SINGING_PRIVATE_KEY2_ARN: privateKeySecret2Arn,
         ISSUER: this.subdomain.zoneName,
+        KEY_BUCKET_NAME: this.keyGenerator.bucket.bucketName,
       },
     });
-    privateKeySecret1.grantRead(tokenFunction);
-    privateKeySecret2.grantRead(tokenFunction);
+    this.keyGenerator.bucket.grantRead(tokenFunction);
     return tokenFunction;
   }
 
