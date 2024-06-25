@@ -38,6 +38,7 @@ export class KeyGenerator extends Construct {
       environment: {
         BUCKET_NAME: this.bucket.bucketName,
       },
+      timeout: Duration.minutes(5), // Plenty of time to generate a RSA key
     });
     this.bucket.grantWrite(keyGeneratorFunction);
 
