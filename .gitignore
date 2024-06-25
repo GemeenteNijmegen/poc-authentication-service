@@ -59,6 +59,7 @@ junit.xml
 /cdk.out/
 .cdk.staging/
 .parcel-cache/
+!/src/key-generator/key-generator-function.ts
 !/src/token/token-function.ts
 !/src/well-known/jwks/jwks-function.ts
 !/src/well-known/openid-configuration/config-function.ts

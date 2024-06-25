@@ -1,13 +1,15 @@
 import { PermissionsBoundaryAspect } from '@gemeentenijmegen/aws-constructs';
-import { Aspects, Stack, StackProps } from 'aws-cdk-lib';
+import { Aspects, Duration, Stack, StackProps } from 'aws-cdk-lib';
 import { LambdaIntegration, RestApi, SecurityPolicy } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
+import { Schedule } from 'aws-cdk-lib/aws-events';
 import { ARecord, HostedZone, NsRecord, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGateway } from 'aws-cdk-lib/aws-route53-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { Configurable } from './Configuration';
+import { KeyGenerator } from './key-generator/KeyGenerator';
 import { Statics } from './Statics';
 import { TokenFunction } from './token/token-function';
 import { JwksFunction } from './well-known/jwks/jwks-function';
@@ -50,6 +52,16 @@ export class AuthenticationServiceStack extends Stack {
     token.addMethod('POST', new LambdaIntegration(this.tokenEndpoint()));
     jwksJson.addMethod('GET', new LambdaIntegration(this.jwksEndpoint()));
     openidConfiguration.addMethod('GET', new LambdaIntegration(this.openidConfigurationEndpoint()));
+
+
+    new KeyGenerator(this, 'key-generation', {
+      keyRetention: Duration.days(50),
+      renewalSchedule: Schedule.cron({
+        minute: '0',
+        hour: '3',
+        day: '0',
+      }),
+    });
 
   }
 

@@ -46,6 +46,9 @@
       "description": "Prepare assets",
       "steps": [
         {
+          "spawn": "bundle:key-generator/key-generator.lambda"
+        },
+        {
           "spawn": "bundle:token/token.lambda"
         },
         {
@@ -53,6 +56,24 @@
         },
         {
           "spawn": "bundle:well-known/openid-configuration/config.lambda"
+        }
+      ]
+    },
+    "bundle:key-generator/key-generator.lambda": {
+      "name": "bundle:key-generator/key-generator.lambda",
+      "description": "Create a JavaScript bundle from src/key-generator/key-generator.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/key-generator/key-generator.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/key-generator/key-generator.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/*"
+        }
+      ]
+    },
+    "bundle:key-generator/key-generator.lambda:watch": {
+      "name": "bundle:key-generator/key-generator.lambda:watch",
+      "description": "Continuously update the JavaScript bundle from src/key-generator/key-generator.lambda.ts",
+      "steps": [
+        {
+          "exec": "esbuild --bundle src/key-generator/key-generator.lambda.ts --target=\"node20\" --platform=\"node\" --outfile=\"assets/key-generator/key-generator.lambda/index.js\" --tsconfig=\"tsconfig.dev.json\" --external:@aws-sdk/* --watch"
         }
       ]
     },
@@ -342,13 +363,13 @@
       },
       "steps": [
         {
-          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@gemeentenijmegen/projen-project-type,@types/jest,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,jest,projen,ts-jest,ts-node,typescript,@gemeentenijmegen/apigateway-http,@gemeentenijmegen/aws-constructs,@gemeentenijmegen/utils,@types/aws-lambda,jose,zod"
+          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@gemeentenijmegen/projen-project-type,@types/jest,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,jest,projen,ts-jest,ts-node,typescript,@aws-sdk/client-s3,@gemeentenijmegen/apigateway-http,@gemeentenijmegen/aws-constructs,@gemeentenijmegen/utils,@types/aws-lambda,jose,zod"
         },
         {
           "exec": "yarn install --check-files"
         },
         {
-          "exec": "yarn upgrade @gemeentenijmegen/projen-project-type @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen standard-version ts-jest ts-node typescript @gemeentenijmegen/apigateway-http @gemeentenijmegen/aws-constructs @gemeentenijmegen/utils @types/aws-lambda aws-cdk-lib constructs jose zod"
+          "exec": "yarn upgrade @gemeentenijmegen/projen-project-type @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen standard-version ts-jest ts-node typescript @aws-sdk/client-s3 @gemeentenijmegen/apigateway-http @gemeentenijmegen/aws-constructs @gemeentenijmegen/utils @types/aws-lambda aws-cdk-lib constructs jose zod"
         },
         {
           "exec": "npx projen"

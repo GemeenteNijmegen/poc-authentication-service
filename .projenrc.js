@@ -4,6 +4,8 @@ const project = new GemeenteNijmegenCdkApp({
   defaultReleaseBranch: 'main',
   devDeps: ['@gemeentenijmegen/projen-project-type'],
   deps: [
+    '@aws-sdk/client-s3',
+    '@aws-sdk/types',
     '@types/aws-lambda',
     '@gemeentenijmegen/apigateway-http',
     '@gemeentenijmegen/aws-constructs',

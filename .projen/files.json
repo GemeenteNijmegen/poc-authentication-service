@@ -16,6 +16,7 @@
     ".projen/tasks.json",
     "cdk.json",
     "LICENSE",
+    "src/key-generator/key-generator-function.ts",
     "src/token/token-function.ts",
     "src/well-known/jwks/jwks-function.ts",
     "src/well-known/openid-configuration/config-function.ts",
