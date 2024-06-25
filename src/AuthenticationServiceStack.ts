@@ -60,6 +60,7 @@ export class AuthenticationServiceStack extends Stack {
         minute: '0',
         hour: '3',
         day: '0',
+        weekDay: '?',
       }),
     });
 

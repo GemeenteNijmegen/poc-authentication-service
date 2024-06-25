@@ -80,6 +80,10 @@
       "type": "runtime"
     },
     {
+      "name": "@aws-sdk/types",
+      "type": "runtime"
+    },
+    {
       "name": "@gemeentenijmegen/apigateway-http",
       "type": "runtime"
     },
