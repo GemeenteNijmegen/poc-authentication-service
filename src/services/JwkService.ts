@@ -39,6 +39,7 @@ export class JwkService {
         jwks.keys.push(jwk);
       }
     }
+    return jwks;
   }
 
 
