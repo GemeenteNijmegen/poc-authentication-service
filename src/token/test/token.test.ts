@@ -1,4 +1,4 @@
-import { generateKeyPair } from 'crypto';
+import { generateKeyPair, randomUUID } from 'crypto';
 import * as util from 'util';
 import { CLIENTS } from './ConfigurationFixture';
 import { InvalidRequest } from '../../oauth/Errors';
@@ -11,7 +11,7 @@ describe('Client authentication', () => {
   const header = `Basic ${credentials}`;
   const body = 'client_id=readClient&client_secret=geheim';
 
-  const handler = new TokenEndpointHandler('', CLIENTS, ISSUER );
+  const handler = new TokenEndpointHandler('', randomUUID(), CLIENTS, ISSUER );
 
   test('Authentication using basic auth', () => {
     const clientId = handler.authenticateRequest({
@@ -50,7 +50,7 @@ describe('Client authentication', () => {
 
 
 describe('Authorize requested scopes', () => {
-  const handler = new TokenEndpointHandler('', CLIENTS, ISSUER );
+  const handler = new TokenEndpointHandler('', randomUUID(), CLIENTS, ISSUER );
 
   test('Request scopes gives only allowed scopes', () => {
     const issuedScopes = handler.authorizeRequestedScopes({
@@ -98,7 +98,7 @@ describe('token exchange tests', () => {
         },
       });
     })();
-    const handler = new TokenEndpointHandler(keyPair.privateKey, CLIENTS, ISSUER );
+    const handler = new TokenEndpointHandler(keyPair.privateKey, randomUUID(), CLIENTS, ISSUER );
 
     const result = await handler.handleTokenExchangeRequest({
       params: new URLSearchParams({

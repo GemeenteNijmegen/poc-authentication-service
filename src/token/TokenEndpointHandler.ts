@@ -50,16 +50,19 @@ export class TokenEndpointHandler {
   private readonly signingKey: string;
   private readonly clients: Record<string, ClientConfiguration>;
   private readonly issuer: string;
+  private readonly kid: string;
+
 
   /**
    * Instantiate a token endpoint handler with a private key used for
    * signing jwt tokens
    * @param signingKey
    */
-  constructor(signingKey: string, clients: Record<string, ClientConfiguration>, issuer: string) {
+  constructor(signingKey: string, kid:string, clients: Record<string, ClientConfiguration>, issuer: string) {
     this.signingKey = signingKey;
     this.issuer = issuer;
     this.clients = clients;
+    this.kid = kid;
   }
 
   async handle(request: TokenEndpointRequest) {
@@ -202,7 +205,7 @@ export class TokenEndpointHandler {
     }).setProtectedHeader({
       alg: 'RS256',
       typ: 'JWT',
-      kid: '0aa559a8-d56f-424c-b9bd-9dd598c3cf15',
+      kid: this.kid,
     }).sign(crypto.createPrivateKey({
       key: privateKeyParam,
       format: 'pem',
