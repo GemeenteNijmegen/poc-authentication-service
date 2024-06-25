@@ -19,6 +19,7 @@ export interface AuthenticationServiceStackProps extends StackProps, Configurabl
 
 export class AuthenticationServiceStack extends Stack {
 
+  private readonly keyGenerator: KeyGenerator;
   private readonly subdomain: HostedZone;
 
   constructor(scope: Construct, id: string, props: AuthenticationServiceStackProps) {
@@ -42,6 +43,16 @@ export class AuthenticationServiceStack extends Stack {
       comment: 'To api gateway',
     });
 
+
+    this.keyGenerator = new KeyGenerator(this, 'key-generation', {
+      keyRetention: Duration.days(50),
+      renewalSchedule: Schedule.cron({
+        minute: '0',
+        hour: '3',
+        day: '1',
+      }),
+    });
+
     // Example authorization server side (token endpoint, jwks endpoint and openid-configuration endpoint. No authorization endpoint)
     const oauth = api.root.addResource('oauth');
     const wellKnown = oauth.addResource('.well-known');
@@ -53,15 +64,6 @@ export class AuthenticationServiceStack extends Stack {
     jwksJson.addMethod('GET', new LambdaIntegration(this.jwksEndpoint()));
     openidConfiguration.addMethod('GET', new LambdaIntegration(this.openidConfigurationEndpoint()));
 
-
-    new KeyGenerator(this, 'key-generation', {
-      keyRetention: Duration.days(50),
-      renewalSchedule: Schedule.cron({
-        minute: '0',
-        hour: '3',
-        day: '1',
-      }),
-    });
 
   }
 
@@ -87,16 +89,12 @@ export class AuthenticationServiceStack extends Stack {
   }
 
   jwksEndpoint() {
-    const cert1 = StringParameter.fromStringParameterName(this, 'cert1', Statics.ssmSigningCertificate1);
-    const cert2 = StringParameter.fromStringParameterName(this, 'cert2', Statics.ssmSigningCertificate2);
     const jwks = new JwksFunction(this, 'jwks', {
       environment: {
-        SSM_CERT1: Statics.ssmSigningCertificate1,
-        SSM_CERT2: Statics.ssmSigningCertificate2,
+        KEY_BUCKET_NAME: this.keyGenerator.bucket.bucketName,
       },
     });
-    cert1.grantRead(jwks);
-    cert2.grantRead(jwks);
+    this.keyGenerator.bucket.grantRead(jwks, 'public-keys/*');
     return jwks;
   }
 

@@ -1,23 +1,42 @@
-import { AWS } from '@gemeentenijmegen/utils';
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { pemToJwk } from './pem2jwk';
 
-// Initialization: build the jwks!
-let cert1: any = undefined;
-let cert2: any = undefined;
 const jwks = { keys: [] as any };
 async function init() {
-  const cert1Pem = await AWS.getParameter(process.env.SSM_CERT1!);
-  cert1 = pemToJwk(cert1Pem);
-  jwks.keys.push(cert1);
 
-  if (process.env.SSM_CERT2) {
-    const cert2Pem = await AWS.getParameter(process.env.SSM_CERT2);
-    if (cert2Pem.startsWith('-----BEGIN CERTIFICATE-----')) {
-      cert2 = pemToJwk(cert2Pem);
-      jwks.keys.push(cert2);
+  if (!process.env.KEY_BUCKET_NAME) {
+    throw Error('Bucket name not set');
+  }
+
+  // List all public keys in the bucket
+  const s3 = new S3Client();
+  const publicKeyObjects = await s3.send(new ListObjectsV2Command({
+    Bucket: process.env.KEY_BUCKET_NAME,
+    Prefix: 'public-keys/',
+  }));
+
+  if (!publicKeyObjects.Contents) {
+    throw Error('No public keys found in s3 buckets...');
+  }
+
+  // Get all pems
+  const promises = publicKeyObjects.Contents.map(obj => {
+    return s3.send(new GetObjectCommand({
+      Bucket: process.env.KEY_BUCKET_NAME,
+      Key: obj.Key,
+    }));
+  });
+  const publicKeys = await Promise.all(promises);
+
+  // Build the jwks response
+  for (const key of publicKeys) {
+    if (key.Body) {
+      const jwk = pemToJwk(await key.Body.transformToString());
+      jwks.keys.push(jwk);
     }
   }
+
 }
 const initalization = init();
 
