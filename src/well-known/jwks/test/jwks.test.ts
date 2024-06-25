@@ -1,3 +1,4 @@
+import { X509Certificate } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { pemToJwk } from '../pem2jwk';
@@ -19,10 +20,21 @@ test('pem to jwk', () => {
 });
 
 
-// test('handler', async () => {
-//   const response = await handler({} as any);
-//   const parsed = JSON.parse(response.body);
-//   expect(parsed.keys.length).toBe(2);
-// });
+test('woegijweoewigj', async () => {
+  new X509Certificate('-----BEGIN PUBLIC KEY-----\n\
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEApgM6+JUdVzlU7iYafTlC\n\
+/rzhlpbnylDU4OiQoXl18CiyDNZxvY01WmxDMfGXeLTwtLK/tWb15yT1LJI2Hm3P\n\
+6aZo8VImF5mC9dDdETb5RiDCi1N9/GZi9UtR1yI2cZ5HU2AtY3VvZaBPxFF6JVlV\n\
+MkAX/v/jwHXRBUg2GWrUyY47ySC4kl2HS8pA4HSnTQV9YJkIKQfhke7M+hw8EIQj\n\
+91JkxPj1O9avOre+qRijdgpoC12HxEwji7+PEDhTheVl+VDl97nkfYu9f1nkiPS8\n\
+B33m6VdpWIA28kFn1LRT3lb0iAwnkjnpnBumBgesQMMawuf40HQJjfLiXLXUkw62\n\
+zhmHgza9eTHu9HoptUaz5dPQuzw3AzIdYgEsofpobxiDmk1sape+qWMc50K946cB\n\
+3YWbfzYlUAEcgRhSxft/DiSjeqPUk9YNk53dBpDeJQNedEs84d15kBwZGUAJRPVz\n\
+A2QzL6yFudPwLhBwGuC6LvpgruHolZQEmkb81CINp6hHVDjfX+tuNyQtSYO1FPzA\n\
+gB1mLOatMPIJHhxts+ZsXU+B9Qq7PshgDk1GHlsD5LIe0cLOCdD1mJavOt+KBhbn\n\
+RBF9PPHr+Yte9YvToAbFNuxpnQcfh2eHf3P39UZ3YNbVxHdbf5lp1kr2Q6C3viN1\n\
+UazhpsR+pmdxCxZCV8S0nVECAwEAAQ==\n\
+-----END PUBLIC KEY-----');
+});
 
 

@@ -1,12 +1,11 @@
 import * as crypto from 'crypto';
 
-export function pemToJwk(certificate: string) {
-  const x509 = new crypto.X509Certificate(certificate);
-  const publicKey = crypto.createPublicKey(certificate);
+export function pemToJwk(pem: string) {
+  const publicKey = crypto.createPublicKey(pem);
   const jwk = publicKey.export({
     format: 'jwk',
   });
-  // Add key id
-  jwk.kid = x509.fingerprint256.replace(/:/g, '');
+  // Add key id as a sha256 hash of the public pem file
+  jwk.kid = crypto.createHash('sha256').update(pem).digest('hex');
   return jwk;
 }
