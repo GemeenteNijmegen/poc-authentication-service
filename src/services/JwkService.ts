@@ -71,7 +71,7 @@ export class JwkService {
     await this.client.send(new PutObjectCommand({
       Bucket: this.bucketName,
       Key: `private-keys/${timestamp}-private.pem`,
-      Body: keys.publicKey.toString(),
+      Body: keys.privateKey.toString(),
     }));
 
   }
