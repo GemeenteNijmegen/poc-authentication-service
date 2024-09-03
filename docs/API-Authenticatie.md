@@ -13,6 +13,7 @@ Wat wij hebben onderzocht is hoe wij een manier van [zero-trust authenticatie](h
 3. Signicat geeft de gebruiker een token op de achtergrond.
 4. De gebruiker kan met dit token inloggen bij mijn-nijmegen. Daarbij wordt gecontroleerd of het token klopt (bij Signicat) en wie de gebruiker is op basis van de informatie in het token.
 5. Mijn-nijmegen moet vervolgens om bij het een achterliggend systeem een API aan te roepen het token van de gebruiker inwisselen voor een nieuw token (bij de DevOps authenticatie service). Dit nieuwe token is voor mijn-nijmegen, maar mijn-nijmegen kan alleen dingen bevragen namens de user van wie het originele token is. De informatie van de user wordt dus ook in het nieuwe token opgenomen. Je zou kunnen zeggen: 'mijn-nijmegen handeld namens de gebruiker'.
+6. De authenticatie service checkt of het token echt van Signicat is.
 6. Mijn-nijmegen bevraagt de submission-storage (een database van ingezonden formulieren) met het nieuw verkregen token, namens de gebruiker.
 7. De submission-storage controleert of het token valide is en of de gevraagde gegevens opgevraagd mogen worden door deze gebruiker (authorisatie). Een gebruiker van mijn-nijmegen mag bijvoorbeeld alleen de eigen formulieren inzien.
 
