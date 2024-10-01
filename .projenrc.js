@@ -2,6 +2,12 @@ const { GemeenteNijmegenCdkApp } = require('@gemeentenijmegen/projen-project-typ
 const project = new GemeenteNijmegenCdkApp({
   cdkVersion: '2.1.0',
   defaultReleaseBranch: 'main',
+  repository: 'https://github.com/GemeenteNijmegen/poc-authentication-service.git',
+  depsUpgradeOptions: {
+    workflowOptions: {
+      branches: ['main'], // No acceptance branch
+    },
+  },
   devDeps: ['@gemeentenijmegen/projen-project-type'],
   deps: [
     '@aws-sdk/client-s3',
